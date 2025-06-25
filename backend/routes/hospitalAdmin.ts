@@ -1,6 +1,5 @@
 import express, { Router } from 'express';
 import { 
-  createHospitalAdmin, 
   loginHospitalAdmin,
   getDashboardData,
   createDoctor,
@@ -13,7 +12,6 @@ const router: Router = express.Router();
 
 
 // Auth routes (no auth middleware needed)
-router.post('/', createHospitalAdmin);
 router.post('/login', loginHospitalAdmin);
 
 // Protected routes (require auth)

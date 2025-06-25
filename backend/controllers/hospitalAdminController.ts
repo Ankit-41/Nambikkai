@@ -2,80 +2,7 @@ import { Request, Response } from 'express';
 import { User, HospitalAdmin, Doctor } from '../models';
 import mongoose from 'mongoose';
 
-export const createHospitalAdmin = async (req: Request, res: Response): Promise<void> => {
-  try {
-    // Get the raw body and parse it if needed
-    let body = req.body;
-    
-    // If body is an object with a single key that looks like JSON string
-    if (typeof body === 'object' && Object.keys(body).length === 1) {
-      const key = Object.keys(body)[0];
-      if (key.includes('{') && key.includes('}')) {
-        try {
-          body = JSON.parse(key);
-        } catch (e) {
-          console.error('Failed to parse JSON:', e);
-        }
-      }
-    }
 
-    // Validate request body
-    if (!body || !body.name || !body.email || !body.password) {
-      res.status(400).json({ 
-        message: 'Missing required fields',
-        required: ['name', 'email', 'password'],
-        received: body
-      });
-      return;
-    }
-
-    const { name, email, password } = body;
-
-    // Check if email already exists
-    const existingAdmin = await HospitalAdmin.findOne({ email });
-    if (existingAdmin) {
-      res.status(400).json({ message: 'Email already registered' });
-      return;
-    }
-
-    // Create user first
-    const user = await User.create({
-      name,
-      role: 'hospital_admin'
-    });
-
-    // Create hospital admin
-    const hospitalAdmin = await HospitalAdmin.create({
-      userId: user._id,
-      email,
-      password,
-      testMetrics: {
-        totalTests: 500,
-        testsAllocated: 0,
-        testsDone: 0,
-        testsRemaining: 500
-      },
-      doctors: []
-    });
-
-    res.status(201).json({
-      message: 'Hospital centre admin created successfully',
-      data: {
-        id: hospitalAdmin._id,
-        name: user.name,
-        email: hospitalAdmin.email,
-        testMetrics: hospitalAdmin.testMetrics
-      }
-    });
-
-  } catch (error) {
-    console.error('Error creating hospital admin:', error);
-    res.status(500).json({ 
-      message: 'Error creating hospital admin',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-};
 
 export const loginHospitalAdmin = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -129,6 +56,7 @@ export const loginHospitalAdmin = async (req: Request, res: Response): Promise<v
     });
   }
 };
+
 
 export const getDashboardData = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -305,7 +233,7 @@ export const allocateTests = async (req: Request, res: Response): Promise<void> 
     await doctor.save();
 
     // Update hospital admin's test metrics
-    hospitalAdmin.testMetrics.testsAllocated += count;
+    hospitalAdmin.testMetrics.testsAllocated -= count;
     hospitalAdmin.testMetrics.testsRemaining -= count;
     await hospitalAdmin.save();
 

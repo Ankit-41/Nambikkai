@@ -15,10 +15,15 @@ const hospitalAdminSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'SuperAdmin',
+    required: true
+  },
   testMetrics: {
     totalTests: {
       type: Number,
-      default: 500
+      default: 0
     },
     testsAllocated: {
       type: Number,
@@ -30,7 +35,7 @@ const hospitalAdminSchema = new mongoose.Schema({
     },
     testsRemaining: {
       type: Number,
-      default: 500
+      default: 0
     }
   },
   doctors: [{

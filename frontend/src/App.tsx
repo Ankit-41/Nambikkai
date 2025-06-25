@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import HospitalAdminDashboard from "./pages/HospitalAdminDashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import PatientDashboard from "./pages/PatientDashboard";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import TestReport from "./pages/TestReport";
 import RunTest from "./pages/RunTest";
 import NotFound from "./pages/NotFound";
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/hospital-admin" element={<HospitalAdminDashboard />} />
             <Route path="/doctor" element={<DoctorDashboard />} />
             <Route path="/patient" element={<PatientDashboard />} />
+            <Route path="/super-admin" element={<SuperAdminDashboard />} />
             <Route path="/test-report/:id" element={<TestReport />} />
             <Route path="/run-test/:patientId" element={<RunTest />} />
             <Route path="*" element={<NotFound />} />

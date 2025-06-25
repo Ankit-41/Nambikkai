@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { HospitalAdmin, Doctor } from '../models';
+import {  SuperAdmin } from '../models/SuperAdmin';
 
-export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+export const SuperAdminAuthMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const email = req.query.email as string;
     console.log('Auth middleware - Email:', email);
@@ -12,17 +12,16 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       return;
     }
 
-    // Check if it's a hospital admin route
-    const hospitalAdmin = await HospitalAdmin.findOne({ email });
-    console.log('Auth middleware - Found hospital admin:', hospitalAdmin ? 'Yes' : 'No');
+    const superAdmin = await SuperAdmin.findOne({ email });
+    console.log('Auth middleware - Found super admin:', superAdmin ? 'Yes' : 'No');
     
-    if (!hospitalAdmin) {
-      console.log('Auth middleware - Hospital admin not found');
+    if (!superAdmin) {
+      console.log('Auth middleware - Super admin not found');
       res.status(401).json({ message: 'Authentication required' });
       return;
     }
 
-    (req as any).hospitalAdmin = hospitalAdmin;
+    (req as any).superAdmin = superAdmin;
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);

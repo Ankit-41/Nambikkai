@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['patient', 'doctor', 'hospital_admin'],
+    enum: ['patient', 'doctor', 'hospital_admin','super_admin'],
     required: true
   },
   createdAt: {

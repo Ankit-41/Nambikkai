@@ -142,6 +142,10 @@ export const createPatient = async (req: Request, res: Response): Promise<void> 
       tests: []
     });
 
+    doctor.patients.push(patient._id);
+    await doctor.save();
+
+
     res.status(201).json({
       message: 'Patient created successfully',
       data: {
