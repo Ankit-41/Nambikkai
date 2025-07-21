@@ -267,6 +267,13 @@ export const createHospitalAdmin = async (req: Request, res: Response): Promise<
         doctors: []
       });
 
+      // Update super admin test metrics
+      superAdmin.testMetrics.testsRemaining -= totalTests;
+      superAdmin.testMetrics.testsAllocated += totalTests;
+      // Prevent negative values
+      if (superAdmin.testMetrics.testsRemaining < 0) superAdmin.testMetrics.testsRemaining = 0;
+      if (superAdmin.testMetrics.testsAllocated < 0) superAdmin.testMetrics.testsAllocated = 0;
+
       superAdmin.hospitalCentres.push(hospitalAdmin._id);
       await superAdmin.save();
   
