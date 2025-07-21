@@ -60,6 +60,8 @@ export const hospitalAdminApi = {
   }) =>
     api.post(`/hospital-admin/doctors?email=${email}`, data),
 
+  createAppointment: (email: string, appointmentData: any) =>
+    api.post(`/hospital-admin/appointments?email=${encodeURIComponent(email)}`, appointmentData),
 
   // Test Management
   allocateTests: (email: string, doctorId: string, count: number) =>

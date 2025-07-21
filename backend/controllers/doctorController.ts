@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { User, Doctor, Patient } from '../models';
+import { Appointment } from '../models/Appointment';
 
 export const loginDoctor = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -73,21 +74,20 @@ export const getDashboardData = async (req: Request, res: Response): Promise<voi
       return;
     }
     
-    // Get all patients for this doctor
-    const patients = await Patient.find({ doctorId: doctor._id })
-      .populate('userId', 'name')
-      .populate('tests');
+    // Get all appointments for this doctor
+    const appointments = await Appointment.find({ doctorId: doctor._id })
+      .populate('userId', 'name');
     
-    console.log('Found patients:', patients.length);
+    console.log('Found appointments:', appointments.length);
 
     await doctor.populate('userId', 'name');
     const doctorName = doctor.userId?.name || 'Doctor';
     const testMetrics = doctor.testMetrics;
-   console.log('doctor name incoming - ', doctorName);
+    console.log('doctor name incoming - ', doctorName);
     res.status(200).json({
       message: 'Dashboard data retrieved successfully',
       data: {
-        patients,
+        appointments,
         doctorName,
         testMetrics
       }

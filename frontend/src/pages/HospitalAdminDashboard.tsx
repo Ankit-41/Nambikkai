@@ -74,6 +74,20 @@ const HospitalAdminDashboard: React.FC = () => {
     password: "",
     gender: "Male" as "Male" | "Female" | "Other",
   })
+  const [showAddAppointmentModal, setShowAddAppointmentModal] = useState(false);
+  const [newAppointment, setNewAppointment] = useState({
+    name: "",
+    age: "",
+    sex: "Male" as "Male" | "Female" | "Other",
+    phoneNumber: "",
+    address: "",
+    kneeCondition: "",
+    otherMorbidities: "",
+    rehabDuration: "",
+    mriImage: "",
+    doctorId: "",
+    appointmentDate: ""
+  });
 
   // Get email from localStorage
   const email = localStorage.getItem("email")
@@ -355,14 +369,24 @@ const HospitalAdminDashboard: React.FC = () => {
                 </CardTitle>
                 <CardDescription className="text-xs">Manage doctors and test allocations</CardDescription>
               </div>
-              <Button
-                onClick={() => setShowAddDoctorModal(true)}
-                className="h-8 text-xs bg-blue-600 hover:bg-blue-700"
-                size="sm"
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                <span>Add Doctor</span>
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setShowAddDoctorModal(true)}
+                  className="h-8 text-xs bg-blue-600 hover:bg-blue-700"
+                  size="sm"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  <span>Add Doctor</span>
+                </Button>
+                <Button
+                  onClick={() => setShowAddAppointmentModal(true)}
+                  className="h-8 text-xs bg-green-600 hover:bg-green-700"
+                  size="sm"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  <span>New Appointment</span>
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -721,6 +745,183 @@ const HospitalAdminDashboard: React.FC = () => {
               <Button onClick={handleAllocateTests} className="h-8 text-xs bg-blue-600 hover:bg-blue-700">
                 <Edit2 className="h-3 w-3 mr-1" />
                 Allocate Tests
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Appointment Dialog */}
+      <Dialog open={showAddAppointmentModal} onOpenChange={setShowAddAppointmentModal}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto p-0">
+          <DialogHeader className="p-4 border-b border-gray-100 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900 z-10">
+            <DialogTitle className="text-base text-gray-900 dark:text-gray-100 flex items-center gap-2">
+              <Plus className="h-4 w-4 text-green-600 dark:text-green-400" />
+              <span>New Appointment</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-4 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                  <span>Patient Name</span>
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  value={newAppointment.name}
+                  onChange={e => setNewAppointment({ ...newAppointment, name: e.target.value })}
+                  placeholder="Patient's full name"
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                  <span>Age</span>
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  type="number"
+                  value={newAppointment.age}
+                  onChange={e => setNewAppointment({ ...newAppointment, age: e.target.value })}
+                  placeholder="Age in years"
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Gender</Label>
+                <select
+                  value={newAppointment.sex}
+                  onChange={e => setNewAppointment({ ...newAppointment, sex: e.target.value as "Male" | "Female" | "Other" })}
+                  className="w-full h-8 px-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 dark:bg-gray-800 dark:border-gray-700"
+                >
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Phone Number</Label>
+                <Input
+                  value={newAppointment.phoneNumber}
+                  onChange={e => setNewAppointment({ ...newAppointment, phoneNumber: e.target.value })}
+                  placeholder="+1 (555) 123-4567"
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Address</Label>
+              <Input
+                value={newAppointment.address}
+                onChange={e => setNewAppointment({ ...newAppointment, address: e.target.value })}
+                placeholder="Patient's residential address"
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                  <span>Knee Condition</span>
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  value={newAppointment.kneeCondition}
+                  onChange={e => setNewAppointment({ ...newAppointment, kneeCondition: e.target.value })}
+                  placeholder="e.g., Post Surgery, Sports Injury"
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Rehabilitation Duration</Label>
+                <Input
+                  type="number"
+                  value={newAppointment.rehabDuration}
+                  onChange={e => setNewAppointment({ ...newAppointment, rehabDuration: e.target.value })}
+                  placeholder="Duration in weeks"
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Other Medical Conditions</Label>
+              <Input
+                value={newAppointment.otherMorbidities}
+                onChange={e => setNewAppointment({ ...newAppointment, otherMorbidities: e.target.value })}
+                placeholder="e.g., Diabetes Type 2, Hypertension"
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Doctor</Label>
+              <select
+                value={newAppointment.doctorId}
+                onChange={e => setNewAppointment({ ...newAppointment, doctorId: e.target.value })}
+                className="w-full h-8 px-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 dark:bg-gray-800 dark:border-gray-700"
+              >
+                <option value="">Select Doctor</option>
+                {doctors.map(doc => (
+                  <option key={doc._id} value={doc._id}>Dr. {doc.userId.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Appointment Date</Label>
+              <Input
+                type="datetime-local"
+                value={newAppointment.appointmentDate}
+                onChange={e => setNewAppointment({ ...newAppointment, appointmentDate: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+          <DialogFooter className="p-4 border-t border-gray-100 dark:border-gray-800">
+            <div className="flex justify-end gap-2 w-full">
+              <Button variant="outline" onClick={() => setShowAddAppointmentModal(false)} className="h-8 text-xs">
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  try {
+                    if (!email) {
+                      setError("Email not found. Please login again.");
+                      return;
+                    }
+                    await hospitalAdminApi.createAppointment(email, {
+                      ...newAppointment,
+                      age: Number(newAppointment.age),
+                      rehabDuration: String(newAppointment.rehabDuration),
+                      appointmentDate: new Date(newAppointment.appointmentDate).toISOString()
+                    });
+                    toast({ title: "Success", description: "Appointment created successfully" });
+                    setShowAddAppointmentModal(false);
+                    setNewAppointment({
+                      name: "",
+                      age: "",
+                      sex: "Male",
+                      phoneNumber: "",
+                      address: "",
+                      kneeCondition: "",
+                      otherMorbidities: "",
+                      rehabDuration: "",
+                      mriImage: "",
+                      doctorId: "",
+                      appointmentDate: ""
+                    });
+                    fetchDashboardData();
+                  } catch (err: any) {
+                    toast({
+                      title: "Error",
+                      description: err.response?.data?.message || "Failed to create appointment",
+                      variant: "destructive"
+                    });
+                  }
+                }}
+                className="h-8 text-xs bg-green-600 hover:bg-green-700"
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Create Appointment
               </Button>
             </div>
           </DialogFooter>

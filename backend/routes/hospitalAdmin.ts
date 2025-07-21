@@ -3,10 +3,12 @@ import {
   loginHospitalAdmin,
   getDashboardData,
   createDoctor,
-  allocateTests
+  allocateTests,
+  createAppointment
 } from '../controllers/hospitalAdminController';
 import { authMiddleware } from '../middleware/auth';
 import { HospitalAdmin } from '../models';
+import { SuperAdminAuthMiddleware } from '../middleware/authSuperAdmin';
 
 const router: Router = express.Router();
 
@@ -18,5 +20,6 @@ router.post('/login', loginHospitalAdmin);
 router.get('/dashboard', authMiddleware, getDashboardData);
 router.post('/doctors', createDoctor);
 router.post('/allocate-tests/:doctorId', authMiddleware, allocateTests);
+router.post('/appointments', authMiddleware, createAppointment);
 
 export default router; 

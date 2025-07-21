@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { User, HospitalAdmin, Doctor } from '../models';
+import { User, HospitalAdmin, Doctor, Patient } from '../models';
 import mongoose from 'mongoose';
-
+import { Appointment } from '../models/Appointment';
 
 
 export const loginHospitalAdmin = async (req: Request, res: Response): Promise<void> => {
@@ -248,6 +248,90 @@ export const allocateTests = async (req: Request, res: Response): Promise<void> 
     console.error('Error allocating tests:', error);
     res.status(500).json({ 
       message: 'Error allocating tests',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+}; 
+
+export const createAppointment = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const {
+      name,
+      age,
+      sex,
+      phoneNumber,
+      address,
+      kneeCondition,
+      otherMorbidities,
+      rehabDuration,
+      mriImage,
+      doctorId,
+      appointmentDate
+    } = req.body;
+
+    // Validate required fields
+    if (!name || !age || !sex || !phoneNumber || !doctorId || !rehabDuration || !kneeCondition || !appointmentDate) {
+      res.status(400).json({ message: 'Missing required fields' });
+      return;
+    }
+
+    // Check doctor exists
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      res.status(404).json({ message: 'Doctor not found' });
+      return;
+    }
+
+    // Create user for patient
+    const user = await User.create({
+      name,
+      role: 'patient'
+    });
+     // Create patient
+     const patient = await Patient.create({
+      userId: user._id,
+      age,
+      sex,
+      phoneNumber,
+      address,
+      kneeCondition,
+      otherMorbidities,
+      rehabDuration,
+      mriImage,
+      doctorId: doctor._id,
+      tests: []
+    });
+
+    // Create appointment
+    const appointment = await Appointment.create({
+      userId: user._id,
+      age,
+      sex,
+      phoneNumber,
+      address,
+      kneeCondition,
+      otherMorbidities,
+      rehabDuration,
+      mriImage,
+      doctorId,
+      appointmentDate
+    });
+
+    res.status(201).json({
+      message: 'Appointment created successfully',
+      data: {
+        id: appointment._id,
+        name: user.name,
+        age: appointment.age,
+        sex: appointment.sex,
+        kneeCondition: appointment.kneeCondition,
+        appointmentDate: appointment.appointmentDate
+      }
+    });
+  } catch (error) {
+    console.error('Error creating appointment:', error);
+    res.status(500).json({
+      message: 'Error creating appointment',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
