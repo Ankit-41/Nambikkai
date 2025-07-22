@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { User, HospitalAdmin, Doctor, Patient } from '../models';
 import mongoose from 'mongoose';
 import { Appointment } from '../models/Appointment';
+import { generatePatientCode } from '../scripts/generatePatientCode';
 
 
 export const loginHospitalAdmin = async (req: Request, res: Response): Promise<void> => {
@@ -266,7 +267,8 @@ export const createAppointment = async (req: Request, res: Response): Promise<vo
       rehabDuration,
       mriImage,
       doctorId,
-      appointmentDate
+      appointmentDate,
+      patientCode
     } = req.body;
 
     // Validate required fields
@@ -282,25 +284,51 @@ export const createAppointment = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // Create user for patient
-    const user = await User.create({
-      name,
-      role: 'patient'
-    });
-     // Create patient
-     const patient = await Patient.create({
-      userId: user._id,
-      age,
-      sex,
-      phoneNumber,
-      address,
-      kneeCondition,
-      otherMorbidities,
-      rehabDuration,
-      mriImage,
-      doctorId: doctor._id,
-      tests: []
-    });
+    let patient;
+    let user;
+    let finalPatientCode = patientCode;
+    if (!patientCode) {
+      // Generate a unique patient code
+      let unique = false;
+      let newCode = '';
+      while (!unique) {
+        newCode = generatePatientCode();
+        const existing = await Patient.findOne({ patientCode: newCode });
+        if (!existing) unique = true;
+      }
+      finalPatientCode = newCode;
+      // Create user for patient
+      user = await User.create({
+        name,
+        role: 'patient'
+      });
+      // Create patient
+      patient = await Patient.create({
+        userId: user._id,
+        age,
+        sex,
+        phoneNumber,
+        address,
+        kneeCondition,
+        otherMorbidities,
+        rehabDuration,
+        mriImage,
+        tests: [],
+        patientCode: finalPatientCode
+      });
+    } else {
+      // If patientCode is provided, do not create a new patient
+      patient = await Patient.findOne({ patientCode });
+      if (!patient) {
+        res.status(404).json({ message: 'Patient with provided code not found' });
+        return;
+      }
+      user = await User.findById(patient.userId);
+      if (!user) {
+        res.status(404).json({ message: 'User for the patient not found' });
+        return;
+      }
+    }
 
     // Create appointment
     const appointment = await Appointment.create({
@@ -314,7 +342,8 @@ export const createAppointment = async (req: Request, res: Response): Promise<vo
       rehabDuration,
       mriImage,
       doctorId,
-      appointmentDate
+      appointmentDate,
+      patientCode: finalPatientCode
     });
 
     res.status(201).json({
@@ -325,13 +354,57 @@ export const createAppointment = async (req: Request, res: Response): Promise<vo
         age: appointment.age,
         sex: appointment.sex,
         kneeCondition: appointment.kneeCondition,
-        appointmentDate: appointment.appointmentDate
+        appointmentDate: appointment.appointmentDate,
+        patientCode: finalPatientCode
       }
     });
   } catch (error) {
     console.error('Error creating appointment:', error);
     res.status(500).json({
       message: 'Error creating appointment',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+}; 
+
+// Get patient details by patientCode
+export const getPatientByCode = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { patientCode } = req.params;
+    if (!patientCode) {
+      res.status(400).json({ message: 'Patient code is required' });
+      return;
+    }
+    const patient = await Patient.findOne({ patientCode }).populate('userId');
+    if (!patient) {
+      res.status(404).json({ message: 'Patient not found' });
+      return;
+    }
+    // Type guard for populated userId
+    let patientName: string | undefined = undefined;
+    if (patient.userId && typeof (patient.userId as any).name === 'string') {
+      patientName = (patient.userId as any).name;
+    }
+    res.status(200).json({
+      message: 'Patient found',
+      data: {
+        id: patient._id,
+        name: patientName,
+        age: patient.age,
+        sex: patient.sex,
+        phoneNumber: patient.phoneNumber,
+        address: patient.address,
+        kneeCondition: patient.kneeCondition,
+        otherMorbidities: patient.otherMorbidities,
+        rehabDuration: patient.rehabDuration,
+        mriImage: patient.mriImage,
+        patientCode: patient.patientCode
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching patient by code:', error);
+    res.status(500).json({
+      message: 'Error fetching patient',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }

@@ -88,6 +88,8 @@ const HospitalAdminDashboard: React.FC = () => {
     doctorId: "",
     appointmentDate: ""
   });
+  const [patientCode, setPatientCode] = useState("");
+  const [fetchingPatient, setFetchingPatient] = useState(false);
 
   // Get email from localStorage
   const email = localStorage.getItem("email")
@@ -761,6 +763,53 @@ const HospitalAdminDashboard: React.FC = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="p-4 space-y-4">
+            {/* Patient Code Autofill */}
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Patient Code</Label>
+                <Input
+                  value={patientCode}
+                  onChange={e => setPatientCode(e.target.value.toUpperCase())}
+                  placeholder="Enter patient code (e.g., ABC123)"
+                  className="h-8 text-sm"
+                  maxLength={6}
+                />
+              </div>
+              <Button
+                className="h-8 text-xs bg-blue-600 hover:bg-blue-700"
+                disabled={!patientCode || fetchingPatient}
+                onClick={async () => {
+                  setFetchingPatient(true);
+                  try {
+                    const res = await hospitalAdminApi.getPatientByCode(email, patientCode);
+                    const data = res.data.data;
+                    setNewAppointment(prev => ({
+                      ...prev,
+                      name: data.name || "",
+                      age: data.age ? String(data.age) : "",
+                      sex: data.sex || "Male",
+                      phoneNumber: data.phoneNumber || "",
+                      address: data.address || "",
+                      kneeCondition: data.kneeCondition || "",
+                      otherMorbidities: data.otherMorbidities || "",
+                      rehabDuration: data.rehabDuration || "",
+                      mriImage: data.mriImage || ""
+                    }));
+                    toast({ title: "Patient found", description: `Details for ${data.name} loaded.` });
+                  } catch (err: any) {
+                    toast({
+                      title: "Patient not found",
+                      description: err.response?.data?.message || "No patient with this code.",
+                      variant: "destructive"
+                    });
+                  } finally {
+                    setFetchingPatient(false);
+                  }
+                }}
+              >
+                Autofill
+              </Button>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label className="text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
@@ -878,7 +927,7 @@ const HospitalAdminDashboard: React.FC = () => {
           </div>
           <DialogFooter className="p-4 border-t border-gray-100 dark:border-gray-800">
             <div className="flex justify-end gap-2 w-full">
-              <Button variant="outline" onClick={() => setShowAddAppointmentModal(false)} className="h-8 text-xs">
+              <Button variant="outline" onClick={() => { setShowAddAppointmentModal(false); setPatientCode(""); }} className="h-8 text-xs">
                 Cancel
               </Button>
               <Button
@@ -909,6 +958,7 @@ const HospitalAdminDashboard: React.FC = () => {
                       doctorId: "",
                       appointmentDate: ""
                     });
+                    setPatientCode("");
                     fetchDashboardData();
                   } catch (err: any) {
                     toast({

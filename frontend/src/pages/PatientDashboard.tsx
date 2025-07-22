@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Layout from "@/components/Layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -32,68 +32,53 @@ import {
   X,
 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
-
-// Dummy data based on the MongoDB schema
-const dummyPatientData = {
-  _id: "684c71ca5fc3c8d60ba3c7be",
-  userId: {
-    _id: "684c71ca5fc3c8d60ba3c7bc",
-    name: "Sarah Johnson",
-    email: "sarah.johnson@email.com",
-  },
-  age: 19,
-  sex: "Female",
-  phoneNumber: "+22333333398",
-  address: "Hyūga corner, Leaf Village, Japan",
-  kneeCondition: "Sports injury",
-  otherMorbidities: "Diabetes Type 2",
-  rehabDuration: "3",
-  mriImage: "",
-  tests: [
-    {
-      _id: "test1",
-      date: "2024-01-15",
-
-    },
-    {
-      _id: "test2",
-      date: "2024-01-10",
-
-    },
-    {
-      _id: "test3",
-      date: "2024-01-05",
-
-    },
-  ],
-  mriImages: [
-    {
-      _id: "mri1",
-      filename: "knee_mri_2024_01_15.jpg",
-      uploadDate: "2024-01-15",
-      description: "Post-treatment MRI scan",
-      url: "/placeholder.svg?height=300&width=400",
-    },
-    {
-      _id: "mri2",
-      filename: "knee_mri_2024_01_01.jpg",
-      uploadDate: "2024-01-01",
-      description: "Initial MRI scan",
-      url: "/placeholder.svg?height=300&width=400",
-    },
-  ],
-}
+import { patientApi } from "../services/api"
 
 const PatientDashboard = () => {
-  const [patient, setPatient] = useState(dummyPatientData)
+  const [patient, setPatient] = useState<any>(null)
+  const [patientCode, setPatientCode] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    const stored = localStorage.getItem("patientData");
+    console.log("stored value is ", stored);
+    if (stored) {
+      setPatient(JSON.parse(stored));
+      setLoading(false);
+      console.log("patient is", patient);
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    console.log("patient is", patient);
+  }, [patient]);
+
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [isUploadingMRI, setIsUploadingMRI] = useState(false)
   const [selectedMRI, setSelectedMRI] = useState<any>(null)
   const [editForm, setEditForm] = useState({
-    phoneNumber: patient.phoneNumber,
-    address: patient.address,
-    otherMorbidities: patient.otherMorbidities,
+    phoneNumber: patient?.phoneNumber || "",
+    address: patient?.address || "",
+    otherMorbidities: patient?.otherMorbidities || "",
   })
+
+  const handlePatientCodeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      const res = await patientApi.getPatientByCode(patientCode);
+      console.log(res.data.data);
+      setPatient(res.data.data);
+      localStorage.setItem("patientData", JSON.stringify(res.data.data));
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Patient not found");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSaveProfile = () => {
     setPatient({ ...patient, ...editForm })
@@ -117,7 +102,7 @@ const PatientDashboard = () => {
       }
       setPatient({
         ...patient,
-        mriImages: [newMRI, ...patient.mriImages],
+        mriImages: [newMRI, ...(patient.mriImages || [])],
       })
       setIsUploadingMRI(false)
       toast({
@@ -141,10 +126,32 @@ const PatientDashboard = () => {
     return "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800"
   }
 
-  const averageScore =
-    patient.tests.length > 0
-      ? Math.round(patient.tests.reduce((sum, test) => sum + test.score, 0) / patient.tests.length)
-      : 0
+  if (loading) {
+    return <Layout><div className="min-h-screen flex items-center justify-center">Loading...</div></Layout>;
+  }
+  if (!patient) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <form onSubmit={handlePatientCodeSubmit} className="space-y-4 bg-white dark:bg-gray-900 p-8 rounded-lg shadow-md">
+            <Label htmlFor="patientCode">Enter your Patient Code</Label>
+            <Input
+              id="patientCode"
+              value={patientCode}
+              onChange={e => setPatientCode(e.target.value.toUpperCase())}
+              placeholder="e.g. ABC123"
+              className="h-10 text-lg"
+              maxLength={6}
+            />
+            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">View Dashboard</Button>
+            {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
+          </form>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Defensive: Only show error if patient is null or undefined (already handled above)
 
   return (
     <Layout>
@@ -159,7 +166,7 @@ const PatientDashboard = () => {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    Welcome back, {patient.userId.name}!
+                    Welcome back, {patient.name || "Patient"}!
                   </h1>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Track your recovery progress and manage your health information
@@ -201,11 +208,11 @@ const PatientDashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <p className="text-xs text-gray-500 dark:text-gray-400">Full Name</p>
-                    <p className="text-sm font-medium">{patient.userId.name}</p>
+                    <p className="text-sm font-medium">{patient.name || "-"}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
-                    <p className="text-sm font-medium">{patient.userId.email}</p>
+                    <p className="text-sm font-medium">{patient.email || "-"}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs text-gray-500 dark:text-gray-400">Age</p>
@@ -277,13 +284,13 @@ const PatientDashboard = () => {
                   variant="outline"
                   className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800"
                 >
-                  {patient.tests.length} Reports
+                  {(patient.tests?.length ?? 0)} Reports
                 </Badge>
               </CardHeader>
               <CardContent>
-                {patient.tests.length > 0 ? (
+                {(patient.tests?.length ?? 0) > 0 ? (
                   <div className="space-y-3">
-                    {[...patient.tests]
+                    {[...(patient.tests ?? [])]
                       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
                       .map((test, index) => (
                         <div
@@ -346,9 +353,9 @@ const PatientDashboard = () => {
                 </Button>
               </CardHeader>
               <CardContent>
-                {patient.mriImages.length > 0 ? (
+                {(patient.mriImages?.length ?? 0) > 0 ? (
                   <div className="space-y-3">
-                    {patient.mriImages.map((mri) => (
+                    {(patient.mriImages ?? []).map((mri) => (
                       <div
                         key={mri._id}
                         className="border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const patientSchema = new mongoose.Schema({
+const appointmentSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -23,6 +23,11 @@ const patientSchema = new mongoose.Schema({
     type: String,
     required: false
   },
+  doctorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Doctor',
+    required: true
+  },
   kneeCondition: {
     type: String,
     required: true
@@ -41,13 +46,12 @@ const patientSchema = new mongoose.Schema({
   },
   patientCode: {
     type: String,
-    required: true,
-    unique: true
+    required: false
   },
-  tests: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Test'
-  }]
+  appointmentDate: {
+    type: Date,
+    required: true
+  }
 });
 
-export const Patient = mongoose.model('Patient', patientSchema); 
+export const Appointment = mongoose.model('Appointment', appointmentSchema); 

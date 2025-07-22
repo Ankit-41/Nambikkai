@@ -5,13 +5,13 @@ import type React from "react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Layout from "@/components/Layout"
-import { hospitalAdminApi, doctorApi, superAdminApi } from "../services/api"
+import { hospitalAdminApi, doctorApi, superAdminApi, patientApi } from "../services/api"
 import { toast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Building2, Stethoscope, User, Mail, Lock, BadgeIcon as IdCard, Shield, CheckCircle } from "lucide-react"
+import { Building2, Stethoscope, User, Mail, Lock, BadgeIcon as IdCard, Shield, CheckCircle, Eye, EyeOff } from "lucide-react"
 
 const Login = () => {
   const navigate = useNavigate()
@@ -22,6 +22,7 @@ const Login = () => {
     patientId: "",
   })
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
 
   const personas = [
     {
@@ -76,7 +77,19 @@ const Login = () => {
           })
           return
         }
-        navigate("/patient")
+        try {
+          const response = await patientApi.getPatientByCode(loginData.patientId);
+          console.log(response.data.data);
+          localStorage.setItem("patientData", JSON.stringify(response.data.data));
+          navigate("/patient");
+        } catch (error: any) {
+          toast({
+            title: "Error",
+            description: error.response?.data?.message || "Invalid Patient ID.",
+            variant: "destructive",
+          });
+        }
+        return;
       } else {
         console.log("Processing non-patient login")
         if (!loginData.email || !loginData.password) {
@@ -306,7 +319,7 @@ const Login = () => {
                         <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                         <Input
                           id="password"
-                          type="password"
+                          type={showPassword ? "text" : "password"}
                           value={loginData.password}
                           onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                           placeholder="Enter your password"
@@ -315,6 +328,15 @@ const Login = () => {
                             : "focus:border-purple-400 focus:ring-purple-400"
                             }`}
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                          tabIndex={-1}
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
                       </div>
                     </div>
                   </>

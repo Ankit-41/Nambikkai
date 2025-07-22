@@ -4,7 +4,8 @@ import {
   getDashboardData,
   createDoctor,
   allocateTests,
-  createAppointment
+  createAppointment,
+  getPatientByCode
 } from '../controllers/hospitalAdminController';
 import { authMiddleware } from '../middleware/auth';
 import { HospitalAdmin } from '../models';
@@ -21,5 +22,6 @@ router.get('/dashboard', authMiddleware, getDashboardData);
 router.post('/doctors', createDoctor);
 router.post('/allocate-tests/:doctorId', authMiddleware, allocateTests);
 router.post('/appointments', authMiddleware, createAppointment);
+router.get('/patient/:patientCode', getPatientByCode);
 
 export default router; 

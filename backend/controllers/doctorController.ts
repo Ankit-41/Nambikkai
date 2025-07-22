@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { User, Doctor, Patient } from '../models';
 import { Appointment } from '../models/Appointment';
+import { generatePatientCode } from '../scripts/generatePatientCode';
 
 export const loginDoctor = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -121,6 +122,16 @@ export const createPatient = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
+    // Generate a unique patient code
+    let unique = false;
+    let newCode = '';
+    while (!unique) {
+      newCode = generatePatientCode();
+      const existing = await Patient.findOne({ patientCode: newCode });
+      if (!existing) unique = true;
+    }
+    const patientCode = newCode;
+
     // Create user first
     const user = await User.create({
       name,
@@ -139,7 +150,8 @@ export const createPatient = async (req: Request, res: Response): Promise<void> 
       rehabDuration,
       mriImage,
       doctorId: doctor._id,
-      tests: []
+      tests: [],
+      patientCode
     });
 
     doctor.patients.push(patient._id);
@@ -153,7 +165,8 @@ export const createPatient = async (req: Request, res: Response): Promise<void> 
         name: user.name,
         age: patient.age,
         sex: patient.sex,
-        kneeCondition: patient.kneeCondition
+        kneeCondition: patient.kneeCondition,
+        patientCode
       }
     });
 

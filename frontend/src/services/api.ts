@@ -66,6 +66,10 @@ export const hospitalAdminApi = {
   // Test Management
   allocateTests: (email: string, doctorId: string, count: number) =>
     api.post(`/hospital-admin/allocate-tests/${doctorId}?email=${email}`, { count }),
+
+  // Get patient details by code
+  getPatientByCode: ( patientCode: string) =>
+    api.get(`/hospital-admin/patient/${patientCode}`),
 };
 
 // Doctor API
@@ -125,6 +129,8 @@ export const patientApi = {
     api.get('/patient/tests'),
   getTestReport: (testId: string) =>
     api.get(`/patient/tests/${testId}/report`),
+  getPatientByCode: (patientCode: string) =>
+    api.get(`/hospital-admin/patient/${patientCode}`),
 };
 
 // Test API
