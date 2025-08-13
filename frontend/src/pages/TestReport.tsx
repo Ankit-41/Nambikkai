@@ -1,14 +1,35 @@
-"use client"
-import { useState } from "react"
-import { useParams, useNavigate, useLocation } from "react-router-dom"
-import Layout from "@/components/Layout"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+"use client";
+import { useState } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import Layout from "@/components/Layout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import {
   Download,
   User,
@@ -26,47 +47,88 @@ import {
   Eye,
   Loader2,
   X,
-} from "lucide-react"
-import { toast } from "@/hooks/use-toast"
+} from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+
+/* ------------------------------------------------------------------
+   1) HARD-CODED MOCK DATA
+   ------------------------------------------------------------------ */
+
+type TimePoint = {
+  time: number;
+  linearDisplacement: number;
+  rangeOfMotion: number;
+  angularDisplacement: number;
+};
+
+type TestData = {
+  linearDisplacement: number; // peak
+  rangeOfMotion: number;      // peak
+  angularDisplacement: number; // peak
+  timeSeriesData: TimePoint[];
+};
+
+const MOCK_TEST_DATA: TestData = {
+  linearDisplacement: 4.2,
+  rangeOfMotion: 125.8,
+  angularDisplacement: 3.7,
+  timeSeriesData: [
+    { time: 0,  linearDisplacement: 4.0, rangeOfMotion: 118.2, angularDisplacement: 3.5 },
+    { time: 1,  linearDisplacement: 4.1, rangeOfMotion: 119.7, angularDisplacement: 3.4 },
+    { time: 2,  linearDisplacement: 4.3, rangeOfMotion: 121.0, angularDisplacement: 3.6 },
+    { time: 3,  linearDisplacement: 4.4, rangeOfMotion: 122.5, angularDisplacement: 3.8 },
+    { time: 4,  linearDisplacement: 4.2, rangeOfMotion: 123.9, angularDisplacement: 3.5 },
+    { time: 5,  linearDisplacement: 4.1, rangeOfMotion: 124.6, angularDisplacement: 3.4 },
+    { time: 6,  linearDisplacement: 4.0, rangeOfMotion: 125.2, angularDisplacement: 3.6 },
+    { time: 7,  linearDisplacement: 4.3, rangeOfMotion: 126.1, angularDisplacement: 3.7 },
+    { time: 8,  linearDisplacement: 4.4, rangeOfMotion: 126.9, angularDisplacement: 3.8 },
+    { time: 9,  linearDisplacement: 4.2, rangeOfMotion: 127.0, angularDisplacement: 3.7 },
+    { time: 10, linearDisplacement: 4.1, rangeOfMotion: 126.4, angularDisplacement: 3.6 },
+    { time: 11, linearDisplacement: 4.0, rangeOfMotion: 125.8, angularDisplacement: 3.7 },
+    { time: 12, linearDisplacement: 4.2, rangeOfMotion: 125.5, angularDisplacement: 3.7 },
+    { time: 13, linearDisplacement: 4.3, rangeOfMotion: 126.2, angularDisplacement: 3.8 },
+    { time: 14, linearDisplacement: 4.1, rangeOfMotion: 125.9, angularDisplacement: 3.6 },
+    { time: 15, linearDisplacement: 4.0, rangeOfMotion: 125.3, angularDisplacement: 3.5 },
+    { time: 16, linearDisplacement: 4.2, rangeOfMotion: 124.8, angularDisplacement: 3.4 },
+    { time: 17, linearDisplacement: 4.3, rangeOfMotion: 125.1, angularDisplacement: 3.5 },
+    { time: 18, linearDisplacement: 4.4, rangeOfMotion: 125.7, angularDisplacement: 3.6 },
+    { time: 19, linearDisplacement: 4.2, rangeOfMotion: 125.8, angularDisplacement: 3.7 }
+  ]
+};
+
+const MOCK_PATIENT = {
+  userId: { name: "John Doe" },
+  age: 45,
+  sex: "Male",
+  patientId: "ABC123",
+  doctorName: "Dr. Sarah Johnson",
+  testDate: "2024-01-15",
+  kneeCondition: "Post Surgery",
+  otherMorbidities: "Diabetes Type 2",
+  rehabDuration: "12 weeks",
+};
+
+/* ------------------------------------------------------------------ */
 
 const TestReport = () => {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const location = useLocation()
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [doctorNotes, setDoctorNotes] = useState(
-    "Patient shows good progress in knee stability. Recommend continued physiotherapy sessions twice weekly. Range of motion has improved significantly since last assessment. Continue current rehabilitation protocol.",
-  )
-  const [isEditingNotes, setIsEditingNotes] = useState(false)
-  const [isDownloading, setIsDownloading] = useState(false)
+    "Patient shows good progress in knee stability. Recommend continued physiotherapy sessions twice weekly. Range of motion has improved significantly since last assessment. Continue current rehabilitation protocol."
+  );
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
-  // Get patient, test data, and doctor from navigation state
-  const { patient, testData, doctor } = location.state || {}
+  // Pull from navigation state if present, else fall back to mocks
+  const { patient, testData, doctor } = location.state || {};
 
-  const patientData = patient || {
-    userId: { name: "John Doe" },
-    age: 45,
-    sex: "Male",
-    patientId: id,
-    doctorName: "Dr. Sarah Johnson",
-    testDate: "2024-01-15",
-    kneeCondition: "Post Surgery",
-    otherMorbidities: "Diabetes Type 2",
-    rehabDuration: "12 weeks",
-  }
+  const patientData = patient || { ...MOCK_PATIENT, patientId: id ?? MOCK_PATIENT.patientId };
 
-  // Use actual test data from raw_data
-  const testResults = testData
-    ? {
-        linearDisplacement: testData.linearDisplacement,
-        rangeOfMotion: testData.rangeOfMotion,
-        angularDisplacement: testData.angularDisplacement,
-      }
-    : {
-        linearDisplacement: 4.2,
-        rangeOfMotion: 125.8,
-        angularDisplacement: 3.7,
-      }
+  const testResults: TestData = testData || MOCK_TEST_DATA;
 
+  // Peak values table
   const peakResults = [
     {
       metric: "Linear Displacement",
@@ -89,42 +151,32 @@ const TestReport = () => {
       status: testResults.angularDisplacement > 5 ? "high" : "normal",
       description: "Measures rotational movement control",
     },
-  ]
+  ];
 
-  // Generate dummy time series data if not provided
-  const generateTimeSeriesData = (baseValue: number, variance: number) => {
-    return Array.from({ length: 120 }, (_, i) => ({
-      time: i,
-      value: baseValue + Math.sin(i * 0.1) * variance + Math.random() * 2 - 1,
-    }))
-  }
+  // Time series for charts
+  const rangeOfMotionData = testResults.timeSeriesData.map((p) => ({
+    time: p.time,
+    value: p.rangeOfMotion,
+  }));
 
-  const rangeOfMotionData =
-    testData?.timeSeriesData?.map((point: any) => ({
-      time: point.time,
-      value: point.rangeOfMotion,
-    })) || generateTimeSeriesData(testResults.rangeOfMotion, 10)
+  const linearDisplacementData = testResults.timeSeriesData.map((p) => ({
+    time: p.time,
+    value: p.linearDisplacement,
+  }));
 
-  const linearDisplacementData =
-    testData?.timeSeriesData?.map((point: any) => ({
-      time: point.time,
-      value: point.linearDisplacement,
-    })) || generateTimeSeriesData(testResults.linearDisplacement, 1)
-
-  const angularDisplacementData =
-    testData?.timeSeriesData?.map((point: any) => ({
-      time: point.time,
-      value: point.angularDisplacement,
-    })) || generateTimeSeriesData(testResults.angularDisplacement, 0.5)
+  const angularDisplacementData = testResults.timeSeriesData.map((p) => ({
+    time: p.time,
+    value: p.angularDisplacement,
+  }));
 
   const handleDownloadReport = async () => {
-    setIsDownloading(true)
+    setIsDownloading(true);
     toast({
       title: "Generating Report",
       description: "Your PDF report is being generated...",
-    })
+    });
 
-    // Simulate PDF generation
+    // Fake PDF generation
     setTimeout(() => {
       const reportContent = `
 KNEE HEALTH TEST REPORT
@@ -134,14 +186,9 @@ Patient Details:
 - Name: ${patientData.userId.name}
 - Age: ${patientData.age}
 - Sex: ${patientData.sex}
-- Patient ID: ${id}
+- Patient ID: ${patientData.patientId}
 - Doctor: ${doctor || patientData.doctorName}
 - Test Date: ${patientData.testDate}
-
-Test Metadata:
-- Knee Condition: ${patientData.kneeCondition}
-- Other Morbidities: ${patientData.otherMorbidities}
-- Rehab Duration: ${patientData.rehabDuration}
 
 Peak Test Results:
 - Linear Displacement: ${testResults.linearDisplacement.toFixed(1)} mm (Optimum: ≤ 6 mm)
@@ -152,34 +199,35 @@ Doctor Notes:
 ${doctorNotes}
 
 Generated on: ${new Date().toLocaleString()}
-      `
+      `;
 
-      const blob = new Blob([reportContent], { type: "text/plain" })
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `knee-health-report-${id}-${new Date().toISOString().split("T")[0]}.txt`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      window.URL.revokeObjectURL(url)
+      const blob = new Blob([reportContent], { type: "text/plain" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `knee-health-report-${patientData.patientId}-${new Date()
+        .toISOString()
+        .split("T")[0]}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
 
-      setIsDownloading(false)
+      setIsDownloading(false);
       toast({
         title: "Download Complete",
         description: "Test report has been downloaded successfully",
-      })
-    }, 2000)
-  }
+      });
+    }, 2000);
+  };
 
   const handleSaveNotes = () => {
-    setIsEditingNotes(false)
+    setIsEditingNotes(false);
     toast({
       title: "Notes Saved",
       description: "Doctor notes have been updated successfully",
-    })
-  }
-
+    });
+  };
 
   return (
     <Layout>
@@ -197,7 +245,9 @@ Generated on: ${new Date().toLocaleString()}
               Back
             </Button>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Test Report</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                Test Report
+              </h1>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Detailed analysis for {patientData.userId.name}
               </p>
@@ -205,7 +255,6 @@ Generated on: ${new Date().toLocaleString()}
           </div>
 
           <div className="flex items-center gap-3">
-           
             <Button
               onClick={handleDownloadReport}
               disabled={isDownloading}
@@ -225,8 +274,6 @@ Generated on: ${new Date().toLocaleString()}
             </Button>
           </div>
         </div>
-
-     
 
         {/* Patient and Test Information */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -253,8 +300,6 @@ Generated on: ${new Date().toLocaleString()}
                   <p className="text-xs text-gray-500 dark:text-gray-400">Sex</p>
                   <p className="text-sm font-medium">{patientData.sex}</p>
                 </div>
-               
-                
                 <div className="space-y-1">
                   <p className="text-xs text-gray-500 dark:text-gray-400">Test Date</p>
                   <p className="text-sm font-medium flex items-center gap-1">
@@ -287,11 +332,17 @@ Generated on: ${new Date().toLocaleString()}
                   </Badge>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Other Medical Conditions</p>
-                  <p className="text-sm font-medium">{patientData.otherMorbidities || "None reported"}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Other Medical Conditions
+                  </p>
+                  <p className="text-sm font-medium">
+                    {patientData.otherMorbidities || "None reported"}
+                  </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Rehabilitation Duration</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Rehabilitation Duration
+                  </p>
                   <p className="text-sm font-medium flex items-center gap-1">
                     <Clock className="h-3 w-3 text-purple-600 dark:text-purple-400" />
                     {patientData.rehabDuration}
@@ -323,25 +374,34 @@ Generated on: ${new Date().toLocaleString()}
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50 dark:bg-gray-800/50">
-                    <TableHead className="text-xs font-medium text-gray-600 dark:text-gray-400">Metric</TableHead>
-                    <TableHead className="text-xs font-medium text-gray-600 dark:text-gray-400">Peak Value</TableHead>
+                    <TableHead className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                      Metric
+                    </TableHead>
+                    <TableHead className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                      Peak Value
+                    </TableHead>
                     <TableHead className="text-xs font-medium text-gray-600 dark:text-gray-400">
                       Optimum Range
                     </TableHead>
-                  <TableHead className="text-xs font-medium text-gray-600 dark:text-gray-400 hidden md:table-cell">
+                    <TableHead className="text-xs font-medium text-gray-600 dark:text-gray-400 hidden md:table-cell">
                       Description
                     </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {peakResults.map((result, index) => (
-                    <TableRow key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <TableRow
+                      key={index}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                    >
                       <TableCell className="font-medium text-sm">{result.metric}</TableCell>
                       <TableCell className="font-bold text-base text-blue-600 dark:text-blue-400">
                         {result.value}
                       </TableCell>
-                      <TableCell className="text-sm text-gray-600 dark:text-gray-400">{result.optimumRange}</TableCell>
-                    
+                      <TableCell className="text-sm text-gray-600 dark:text-gray-400">
+                        {result.optimumRange}
+                      </TableCell>
+
                       <TableCell className="text-xs text-gray-500 dark:text-gray-400 hidden md:table-cell">
                         {result.description}
                       </TableCell>
@@ -490,7 +550,10 @@ Generated on: ${new Date().toLocaleString()}
                   onChange={(e) => setDoctorNotes(e.target.value)}
                 />
                 <div className="flex gap-3">
-                  <Button onClick={handleSaveNotes} className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Button
+                    onClick={handleSaveNotes}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
                     <Save className="h-4 w-4 mr-1" />
                     Save Notes
                   </Button>
@@ -502,14 +565,16 @@ Generated on: ${new Date().toLocaleString()}
               </div>
             ) : (
               <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border-l-4 border-blue-500">
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{doctorNotes}</p>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                  {doctorNotes}
+                </p>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
     </Layout>
-  )
-}
+  );
+};
 
-export default TestReport
+export default TestReport;

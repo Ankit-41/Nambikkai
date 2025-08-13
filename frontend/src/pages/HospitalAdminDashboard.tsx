@@ -781,7 +781,7 @@ const HospitalAdminDashboard: React.FC = () => {
                 onClick={async () => {
                   setFetchingPatient(true);
                   try {
-                    const res = await hospitalAdminApi.getPatientByCode(email, patientCode);
+                    const res = await hospitalAdminApi.getPatientByCode( patientCode);
                     const data = res.data.data;
                     setNewAppointment(prev => ({
                       ...prev,

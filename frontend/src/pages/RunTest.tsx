@@ -64,6 +64,7 @@ const RunTest = () => {
   const patient = location.state?.patient
 
   const [puckId, setPuckId] = useState("")
+  const [legLength, setLegLength] = useState("")
   const [leg, setLeg] = useState<"Left" | "Right" | "">("")
   const [currentStep, setCurrentStep] = useState(0)
   const [running, setRunning] = useState(false)
@@ -288,6 +289,29 @@ const RunTest = () => {
                   </div>
                 )}
                 <p className="text-xs text-gray-500 dark:text-gray-400">Select which leg is being tested</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="puckId" className="text-sm flex items-center gap-1">
+                  Leg Length <span className="text-red-500">*</span>
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="puckId"
+                    value={legLength}
+                    onChange={(e) => setPuckId(e.target.value)}
+                    placeholder="Enter Leg Length"
+                    className={`pl-3 ${!puckId && "border-red-200 dark:border-red-800"}`}
+                  />
+                  {!legLength && (
+                    <div className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> Required field
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Enter the patient's leg length
+                </p>
               </div>
             </div>
           </CardContent>
