@@ -2,7 +2,106 @@ import { Request, Response } from 'express';
 import { User, Doctor, Patient } from '../models';
 import { Appointment } from '../models/Appointment';
 import { generatePatientCode } from '../scripts/generatePatientCode';
+import Report from '../models/Report';
+import axios from 'axios';
+// hi guys
+import fs from "fs";
 
+export const downloadAndSaveReport = async (req: Request, res: Response) => {
+  try {
+    const { puckId, timestamp } = req.body;
+
+    console.log("📥 Incoming request body:", req.body);
+
+    if (!puckId || !timestamp) {
+      console.error("❌ Missing puckId or timestamp");
+      return res.status(400).json({ message: "puckId and timestamp are required" });
+    }
+
+    // Step 1: Call first AWS API to download up to 3 files
+    console.log(`🌐 Calling /mystage/download with id="${puckId}" and timestamp="${timestamp}"`);
+
+    const awsResp = await axios.post(
+      "https://rdj3988sm9.execute-api.eu-north-1.amazonaws.com/mystage/download",
+      { id: puckId, timestamp }, // Fixed: no trailing underscore
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    console.log(`✅ Received response from download API, type: ${typeof awsResp.data}`);
+
+    if (!Array.isArray(awsResp.data) || awsResp.data.length === 0) {
+      console.error("⚠️ No files found in bucket for given puckId/timestamp");
+      return res.status(404).json({ message: "No files found in bucket" });
+    }
+
+    console.log(`📄 Number of files returned: ${awsResp.data.length}`);
+    awsResp.data.forEach((f: any, idx: number) => {
+      console.log(`   [${idx + 1}] Filename: ${f.filename}, Data length: ${f.data_base64?.length || 0}`);
+    });
+
+    // Step 2: Decode all Base64 files into one merged object
+    const mergedObject: Record<string, any> = {};
+
+    for (const fileEntry of awsResp.data) {
+      if (!fileEntry.filename || !fileEntry.data_base64) {
+        console.warn(`⚠️ Skipping invalid entry: ${JSON.stringify(fileEntry)}`);
+        continue;
+      }
+
+      try {
+        const decodedStr = Buffer.from(fileEntry.data_base64, "base64").toString("utf-8");
+        const decodedJson = JSON.parse(decodedStr);
+
+        mergedObject[fileEntry.filename] = decodedJson;
+
+        console.log(`📂 Decoded and added file: ${fileEntry.filename} with ${Object.keys(decodedJson).length} top-level keys`);
+      } catch (err) {
+        console.error(`❌ Error decoding/JSON parsing file ${fileEntry.filename}:`, err);
+      }
+    }
+
+    console.log(`📦 Total files merged: ${Object.keys(mergedObject).length}`);
+
+    if (Object.keys(mergedObject).length === 0) {
+      console.error("❌ No valid files decoded, aborting");
+      return res.status(400).json({ message: "Failed to decode any files" });
+    }
+
+    // Optional: Save merged object locally for debugging
+    const debugFile = "merged_payload_debug.json";
+    fs.writeFileSync(debugFile, JSON.stringify(mergedObject, null, 2));
+    console.log(`💾 Merged payload saved locally as ${debugFile}`);
+
+    // Step 3: Send merged JSON to second API
+    console.log("🚀 Sending merged payload to /new1/process – Payload preview:");
+    console.log(JSON.stringify(mergedObject).slice(0, 500) + "...");
+
+    const processedResp = await axios.post(
+      "https://knd87dm4x9.execute-api.eu-north-1.amazonaws.com/new1/process",
+      mergedObject,
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    console.log("✅ Received response from /new1/process – Status:", processedResp.status);
+    console.log("📄 Preview of /new1/process response data:", JSON.stringify(processedResp.data).slice(0, 500) + "...");
+
+    // Step 4: Return processed data to frontend
+    return res.status(200).json({
+      message: "Processed report ready",
+      filesProcessed: Object.keys(mergedObject).length,
+      data: processedResp.data,
+    });
+
+  } catch (error: any) {
+    console.error("💥 Error in downloadAndSaveReport:", error?.response?.data || error.message || error);
+    return res.status(500).json({
+      message: "Failed to process report",
+      error: error?.message || "Unknown error",
+    });
+  }
+};
+
+// till here
 export const loginDoctor = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log('Doctor login attempt:', req.body);

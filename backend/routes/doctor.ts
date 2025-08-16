@@ -2,7 +2,8 @@ import express, { Router } from 'express';
 import { 
   loginDoctor,
   getDashboardData,
-  createPatient
+  createPatient,
+  downloadAndSaveReport
 } from '../controllers/doctorController';
 import { authMiddleware } from '../middleware/auth';
 import { DocAuthMiddleware } from '../middleware/authDoc';
@@ -15,5 +16,6 @@ router.post('/login', loginDoctor);
 // Protected routes (require auth)
 router.get('/dashboard', DocAuthMiddleware, getDashboardData);
 router.post('/patients', DocAuthMiddleware, createPatient);
+router.post('/download-report', downloadAndSaveReport);
 
 export default router; 

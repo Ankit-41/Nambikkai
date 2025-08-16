@@ -108,17 +108,66 @@ const RunTest = () => {
       setCurrentStep((step) => step + 1)
     }
   }
+  // start here
 
-  const handleGenerateReport = () => {
-    setGenerating(true)
-    toast({ title: "Generating Report", description: "Please wait..." })
-    setTimeout(() => {
-      setGenerating(false)
-      toast({ title: "Report Ready", description: "Test report generated." })
-      navigate(`/test-report/${patientId}`, { state: { patient, puckId, leg } })
-    }, 10000)
+  const handleGenerateReport = async () => {
+  try {
+    if (!puckId) {
+      toast({
+        title: "Error",
+        description: "Puck ID is missing",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Generate timestamp in format: YYYYMMDD-HHMMSS (adjust if AWS expects something else)
+    const now = new Date();
+    // const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2,"0")}-${String(now.getHours()).padStart(2,"0")}${String(now.getMinutes()).padStart(2,"0")}${String(now.getSeconds()).padStart(2,"0")}`;
+    const timestamp = "20250725-063723";
+    setGenerating(true);
+    toast({ title: "Generating Report", description: "Please wait..." });
+
+    const response = await fetch("http://localhost:5000/api/doctor/download-report", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // Include auth token if needed:
+        // "Authorization": `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({ puckId, timestamp })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      toast({
+        title: "Report Saved",
+        description: "The report has been generated and stored successfully"
+      });
+      navigate(`/test-report/${patientId}`, {
+        state: { patient, puckId, leg, report: data.data }
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: data.message || "Failed to generate report",
+        variant: "destructive"
+      });
+    }
+  } catch (error) {
+    console.error("Error generating report:", error);
+    toast({
+      title: "Error",
+      description: "Something went wrong while generating the report",
+      variant: "destructive"
+    });
+  } finally {
+    setGenerating(false);
   }
+};
 
+  //end here
   if (!patient) {
     return (
       <Layout>
