@@ -68,7 +68,7 @@ export const hospitalAdminApi = {
     api.post(`/hospital-admin/allocate-tests/${doctorId}?email=${email}`, { count }),
 
   // Get patient details by code
-  getPatientByCode: ( patientCode: string) =>
+  getPatientByCode: (patientCode: string) =>
     api.get(`/hospital-admin/patient/${patientCode}`),
 };
 
@@ -110,6 +110,33 @@ export const doctorApi = {
     puckId: string;
   }) =>
     api.post(`/doctor/tests?email=${email}`, data),
+
+  // Report
+  getReport: (email: string, data:
+    { puckId: string, timestamp: string }) =>
+    api.post(`/doctor/download-report?email=${email}`, data),
+
+  // Save Test Results
+  saveTestResults: (email: string, data: {
+    patientId: string;
+    puckId: string;
+    legTested: string;
+    legLength: number;
+    testResults: {
+      rangeOfMotion: number;
+      linearDisplacement: number;
+      angularDisplacement: number;
+      timeSeriesData: Array<{
+        time: number;
+        rangeOfMotion: number;
+        linearDisplacement: number;
+        angularDisplacement: number;
+      }>;
+    };
+    doctorNotes: string;
+    filesProcessed: number;
+  }) =>
+    api.post(`/doctor/save-test-results?email=${email}`, data),
 };
 
 // Patient API

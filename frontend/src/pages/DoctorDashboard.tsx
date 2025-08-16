@@ -18,6 +18,7 @@ interface Appointment {
   _id: string;
   userId: {
     name: string;
+  
   };
   age: number;
   sex: "Male" | "Female" | "Other";

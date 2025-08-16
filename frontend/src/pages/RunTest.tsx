@@ -25,6 +25,7 @@ import {
   Loader2,
 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
+import { doctorApi } from "../services/api"
 
 interface Patient {
   id: string
@@ -71,6 +72,14 @@ const RunTest = () => {
   const [elapsed, setElapsed] = useState(0)
   const [completedTests, setCompletedTests] = useState<Set<TestType>>(new Set())
   const [generating, setGenerating] = useState(false)
+
+  const email = localStorage.getItem("email")
+
+  useEffect(() => {
+    if (!email) {
+      navigate("/login")
+    }
+  }, [email, navigate])
 
   useEffect(() => {
     let timer: NodeJS.Timeout
@@ -128,25 +137,28 @@ const RunTest = () => {
     setGenerating(true);
     toast({ title: "Generating Report", description: "Please wait..." });
 
-    const response = await fetch("http://localhost:5000/api/doctor/download-report", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        // Include auth token if needed:
-        // "Authorization": `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify({ puckId, timestamp })
-    });
+    // const response = await fetch("http://localhost:5000/api/doctor/download-report?email=d1@hospital.com", {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     // Include auth token if needed:
+    //     // "Authorization": `Bearer ${localStorage.getItem("token")}`,
+    //   },
+    //   body: JSON.stringify({ puckId, timestamp })
+    // });
 
-    const data = await response.json();
+    const response = await doctorApi.getReport(email, { puckId, timestamp })
 
-    if (response.ok) {
+    const data = response.data;
+    console.log("hiya hoo ha", data);
+
+    if (response.status === 200) {
       toast({
         title: "Report Saved",
         description: "The report has been generated and stored successfully"
       });
       navigate(`/test-report/${patientId}`, {
-        state: { patient, puckId, leg, report: data.data }
+        state: { patient, puckId, leg, legLength, report: data.data }
       });
     } else {
       toast({
@@ -348,9 +360,9 @@ const RunTest = () => {
                   <Input
                     id="puckId"
                     value={legLength}
-                    onChange={(e) => setPuckId(e.target.value)}
+                    onChange={(e) => setLegLength(e.target.value)}
                     placeholder="Enter Leg Length"
-                    className={`pl-3 ${!puckId && "border-red-200 dark:border-red-800"}`}
+                    className={`pl-3 ${!legLength && "border-red-200 dark:border-red-800"}`}
                   />
                   {!legLength && (
                     <div className="text-xs text-red-500 mt-1 flex items-center gap-1">

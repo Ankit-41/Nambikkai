@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { User, Doctor, Patient } from '../models';
+import Test from '../models/Test';
 import { Appointment } from '../models/Appointment';
 import { generatePatientCode } from '../scripts/generatePatientCode';
-import Report from '../models/Report';
 import axios from 'axios';
 // hi guys
 import fs from "fs";
@@ -273,6 +273,74 @@ export const createPatient = async (req: Request, res: Response): Promise<void> 
     console.error('Error creating patient:', error);
     res.status(500).json({ 
       message: 'Error creating patient',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+}; 
+
+export const saveTestResults = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const {
+      patientId,
+      puckId,
+      legTested,
+      legLength,
+      testResults,
+      doctorNotes,
+      filesProcessed
+    } = req.body;
+
+    const doctor = (req as any).doctor;
+    if (!doctor) {
+      res.status(401).json({ message: 'Authentication required' });
+      return;
+    }
+
+    // Validate required fields
+    if (!patientId || !puckId || !legTested || !legLength || !testResults || !doctorNotes) {
+      res.status(400).json({ 
+        message: 'Missing required fields',
+        required: ['patientId', 'puckId', 'legTested', 'legLength', 'testResults', 'doctorNotes']
+      });
+      return;
+    }
+
+    // Create new test record
+    const test = await Test.create({
+      patientId,
+      doctorId: doctor._id,
+      puckId,
+      legLength,
+      legTested,
+      testDate: new Date(),
+      maxRangeOfMotion: testResults.rangeOfMotion,
+      maxLinearDisplacement: testResults.linearDisplacement,
+      maxAngularDisplacement: testResults.angularDisplacement,
+      timeSeriesData: testResults.timeSeriesData,
+      doctorNotes,
+      filesProcessed: filesProcessed || 0
+    });
+
+    // Update patient's tests array
+    await Patient.findByIdAndUpdate(
+      patientId,
+      { $push: { tests: test._id } }
+    );
+
+    res.status(201).json({
+      message: 'Test results saved successfully',
+      data: {
+        testId: test._id,
+        patientId: test.patientId,
+        testDate: test.testDate,
+        legTested: test.legTested
+      }
+    });
+
+  } catch (error) {
+    console.error('Error saving test results:', error);
+    res.status(500).json({ 
+      message: 'Error saving test results',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }

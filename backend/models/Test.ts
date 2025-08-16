@@ -1,27 +1,43 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
-const timeSeriesDataSchema = new mongoose.Schema({
-  time: {
-    type: Number,
-    required: true
-  },
-  linearDisplacement: {
-    type: Number,
-    required: true
-  },
-  rangeOfMotion: {
-    type: Number,
-    required: true
-  },
-  angularDisplacement: {
-    type: Number,
-    required: true
-  }
-});
+export interface ITest extends Document {
+  patientId: mongoose.Types.ObjectId;
+  doctorId: mongoose.Types.ObjectId;
+  puckId: string;
+  legTested: 'Left' | 'Right';
+  legLength: number;
+  testDate: Date;
+  
+  // Test Results - Peak Values
+  maxRangeOfMotion: number;
+  maxLinearDisplacement: number;
+  maxAngularDisplacement: number;
+  
+  // Time Series Data
+  timeSeriesData: Array<{
+    time: number;
+    rangeOfMotion: number;
+    linearDisplacement: number;
+    angularDisplacement: number;
+  }>;
+  
+  // Doctor Notes
+  doctorNotes: string;
+  
+  // Metadata
+  filesProcessed: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-const testSchema = new mongoose.Schema({
+const TestSchema: Schema = new Schema({
+  patientId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Patient',
+    required: true
+  },
   doctorId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Doctor',
     required: true
   },
@@ -29,31 +45,59 @@ const testSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  legTested: {
+    type: String,
+    enum: ['Left', 'Right'],
+    required: true
+  },
+  legLength: {
+    type: Number,
+    required: true
+  },
   testDate: {
     type: Date,
     default: Date.now
   },
-  linearDisplacement: {
+  
+  // Test Results - Peak Values
+  maxRangeOfMotion: {
     type: Number,
     required: true
   },
-  rangeOfMotion: {
+  maxLinearDisplacement: {
     type: Number,
     required: true
   },
-  angularDisplacement: {
+  maxAngularDisplacement: {
     type: Number,
     required: true
   },
-  timeSeriesData: [timeSeriesDataSchema],
+  
+  // Time Series Data
+  timeSeriesData: [{
+    time: Number,
+    rangeOfMotion: Number,
+    linearDisplacement: Number,
+    angularDisplacement: Number
+  }],
+  
+  // Doctor Notes
   doctorNotes: {
     type: String,
-    default: ''
+    required: true
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
+  
+  // Metadata
+  filesProcessed: {
+    type: Number,
+    required: true
   }
+}, {
+  timestamps: true
 });
 
-export const Test = mongoose.model('Test', testSchema); 
+// Index for efficient queries
+TestSchema.index({ patientId: 1, testDate: -1 });
+TestSchema.index({ doctorId: 1, testDate: -1 });
+
+export default mongoose.model<ITest>('Test', TestSchema); 

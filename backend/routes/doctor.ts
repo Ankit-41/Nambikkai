@@ -3,7 +3,8 @@ import {
   loginDoctor,
   getDashboardData,
   createPatient,
-  downloadAndSaveReport
+  downloadAndSaveReport,
+  saveTestResults
 } from '../controllers/doctorController';
 import { authMiddleware } from '../middleware/auth';
 import { DocAuthMiddleware } from '../middleware/authDoc';
@@ -17,5 +18,6 @@ router.post('/login', loginDoctor);
 router.get('/dashboard', DocAuthMiddleware, getDashboardData);
 router.post('/patients', DocAuthMiddleware, createPatient);
 router.post('/download-report', downloadAndSaveReport);
+router.post('/save-test-results', DocAuthMiddleware, saveTestResults);
 
 export default router; 
