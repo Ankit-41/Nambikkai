@@ -28,11 +28,20 @@ import { toast } from "@/hooks/use-toast"
 import { doctorApi } from "../services/api"
 
 interface Patient {
-  id: string
-  userId: { name: string }
+  _id: string
+  userId: { 
+    _id: string
+    name: string 
+  }
   age: number
   sex: string
   condition: string
+  kneeCondition: string
+  phoneNumber: string
+  address: string
+  otherMorbidities?: string
+  rehabDuration: string
+  mriImage: string
   tests?: Array<{ date: string }>
 }
 

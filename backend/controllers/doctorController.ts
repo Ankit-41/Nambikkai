@@ -322,10 +322,12 @@ export const saveTestResults = async (req: Request, res: Response): Promise<void
     });
 
     // Update patient's tests array
-    await Patient.findByIdAndUpdate(
-      patientId,
-      { $push: { tests: test._id } }
+    await Patient.findOneAndUpdate(
+      { userId: patientId },           // filter by userId
+      { $push: { tests: test._id } },   // update
+      { new: true }                     // return the updated doc
     );
+
 
     res.status(201).json({
       message: 'Test results saved successfully',

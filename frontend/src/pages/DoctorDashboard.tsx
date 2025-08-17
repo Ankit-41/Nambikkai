@@ -18,7 +18,7 @@ interface Appointment {
   _id: string;
   userId: {
     name: string;
-  
+    _id: string;
   };
   age: number;
   sex: "Male" | "Female" | "Other";
@@ -87,9 +87,28 @@ const DoctorDashboard = () => {
     }
   }, [email])
 
-  const handleRunTest = (patient: Appointment) => {
-    navigate(`/run-test/${patient._id}`, {
-      state: { patient }
+  const handleRunTest = (appointment: Appointment) => {
+    navigate(`/run-test/${appointment.userId._id}`, {
+      state: { 
+        patient: {
+          _id: appointment.userId._id,
+          id: appointment.userId._id,
+          userId: { 
+            _id: appointment.userId._id,
+            name: appointment.userId.name 
+          },
+          age: appointment.age,
+          sex: appointment.sex,
+          condition: appointment.kneeCondition,
+          kneeCondition: appointment.kneeCondition,
+          // Add other patient fields as needed
+          phoneNumber: appointment.phoneNumber,
+          address: appointment.address,
+          otherMorbidities: appointment.otherMorbidities,
+          rehabDuration: appointment.rehabDuration,
+          mriImage: appointment.mriImage
+        }
+      }
     })
   }
   const handleViewReport = (patientId: string) => {
