@@ -135,8 +135,8 @@ export const doctorApi = {
     };
     doctorNotes: string;
     filesProcessed: number;
-  }) =>
-    api.post(`/doctor/save-test-results?email=${email}`, data),
+  }, appointmentId?: string) =>
+    api.post(`/doctor/save-test-results?email=${email}`, { ...data, appointmentId }),
 };
 
 // Patient API

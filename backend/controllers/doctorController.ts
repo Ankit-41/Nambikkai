@@ -287,7 +287,8 @@ export const saveTestResults = async (req: Request, res: Response): Promise<void
       legLength,
       testResults,
       doctorNotes,
-      filesProcessed
+      filesProcessed,
+      appointmentId
     } = req.body;
 
     const doctor = (req as any).doctor;
@@ -328,6 +329,34 @@ export const saveTestResults = async (req: Request, res: Response): Promise<void
       { new: true }                     // return the updated doc
     );
 
+    // Delete the appointment if appointmentId is provided
+    if (appointmentId) {
+      try {
+        await Appointment.findByIdAndDelete(appointmentId);
+        console.log(`Appointment ${appointmentId} deleted successfully`);
+      } catch (appointmentError) {
+        console.error('Error deleting appointment:', appointmentError);
+        // Don't fail the entire operation if appointment deletion fails
+      }
+    }
+
+    // Update doctor's test counters
+    try {
+      await Doctor.findByIdAndUpdate(
+        doctor._id,
+        {
+          $inc: {
+            'testMetrics.testsDone': 1,
+            'testMetrics.testsRemaining': -1
+          }
+        },
+        { new: true }
+      );
+      console.log(`Doctor ${doctor._id} test counters updated successfully`);
+    } catch (counterError) {
+      console.error('Error updating doctor test counters:', counterError);
+      // Don't fail the entire operation if counter update fails
+    }
 
     res.status(201).json({
       message: 'Test results saved successfully',

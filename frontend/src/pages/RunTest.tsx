@@ -167,7 +167,7 @@ const RunTest = () => {
         description: "The report has been generated and stored successfully"
       });
       navigate(`/test-report/${patientId}`, {
-        state: { patient, puckId, leg, legLength, report: data.data }
+        state: { patient, puckId, leg, legLength, report: data.data, appointmentId: location.state?.appointmentId }
       });
     } else {
       toast({

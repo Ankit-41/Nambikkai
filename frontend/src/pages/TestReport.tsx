@@ -103,7 +103,7 @@ const TestReport = () => {
   const reportRef = useRef<HTMLDivElement>(null);
 
   // Get data from navigation state
-  const { patient, puckId, leg, report } = location.state || {};
+  const { patient, puckId, leg, report, appointmentId } = location.state || {};
 
   console.log("patient", patient);
   console.log("puckId", puckId);
@@ -348,14 +348,19 @@ const TestReport = () => {
       }
 
       console.log('📤 Sending API request to save test results...');
-      const response = await doctorApi.saveTestResults(doctorEmail, testData);
+      const response = await doctorApi.saveTestResults(doctorEmail, testData, appointmentId);
       console.log('📥 API response received:', response);
 
       if (response.status === 201) {
         toast({
           title: "Success",
-          description: "Test results and notes saved successfully",
+          description: "Test results and notes saved successfully. Appointment completed and removed.",
         });
+        
+        // Navigate back to doctor dashboard after successful completion
+        setTimeout(() => {
+          navigate("/doctor");
+        }, 2000);
       } else {
         throw new Error(`Failed to save test results. Status: ${response.status}`);
       }

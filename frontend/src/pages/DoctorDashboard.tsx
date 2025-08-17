@@ -107,7 +107,8 @@ const DoctorDashboard = () => {
           otherMorbidities: appointment.otherMorbidities,
           rehabDuration: appointment.rehabDuration,
           mriImage: appointment.mriImage
-        }
+        },
+        appointmentId: appointment._id
       }
     })
   }
