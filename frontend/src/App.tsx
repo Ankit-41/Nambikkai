@@ -12,6 +12,7 @@ import PatientDashboard from "./pages/PatientDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import TestReport from "./pages/TestReport";
 import RunTest from "./pages/RunTest";
+import PatientTestReport from "./pages/PatientTestReport";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/super-admin" element={<SuperAdminDashboard />} />
             <Route path="/test-report/:id" element={<TestReport />} />
             <Route path="/run-test/:patientId" element={<RunTest />} />
+            <Route path="/patient-test-report/:testId" element={<PatientTestReport />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

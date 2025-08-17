@@ -146,16 +146,16 @@ export const patientApi = {
     api.post('/patient/login', data),
 
   // Profile
-  getProfile: () =>
-    api.get('/patient/profile'),
+  getProfile: (patientCode: string) =>
+    api.get(`/patient/profile/${patientCode}`),
   updateProfile: (data: any) =>
     api.put('/patient/profile', data),
 
   // Tests
-  getTests: () =>
-    api.get('/patient/tests'),
+  getTests: (patientCode: string) =>
+    api.get(`/patient/tests/${patientCode}`),
   getTestReport: (testId: string) =>
-    api.get(`/patient/tests/${testId}/report`),
+    api.get(`/patient/test-report/${testId}`),
   getPatientByCode: (patientCode: string) =>
     api.get(`/hospital-admin/patient/${patientCode}`),
 };

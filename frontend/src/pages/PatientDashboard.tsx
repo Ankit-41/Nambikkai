@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import Layout from "@/components/Layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -35,21 +36,48 @@ import { toast } from "@/hooks/use-toast"
 import { patientApi } from "../services/api"
 
 const PatientDashboard = () => {
+  const navigate = useNavigate();
   const [patient, setPatient] = useState<any>(null)
   const [patientCode, setPatientCode] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [tests, setTests] = useState<any[]>([]);
+  const [testsLoading, setTestsLoading] = useState(false);
+
   useEffect(() => {
     const stored = localStorage.getItem("patientData");
     console.log("stored value is ", stored);
     if (stored) {
-      setPatient(JSON.parse(stored));
+      const patientData = JSON.parse(stored);
+      setPatient(patientData);
       setLoading(false);
-      console.log("patient is", patient);
+      console.log("patient is", patientData);
+      
+      // Fetch tests for this patient
+      if (patientData.patientCode) {
+        fetchPatientTests(patientData.patientCode);
+      }
     } else {
       setLoading(false);
     }
   }, []);
+
+  const fetchPatientTests = async (patientCode: string) => {
+    try {
+      setTestsLoading(true);
+      const response = await fetch(`http://localhost:5000/api/patient/tests/${patientCode}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setTests(data.data);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching tests:', err);
+    } finally {
+      setTestsLoading(false);
+    }
+  };
 
   useEffect(() => {
     console.log("patient is", patient);
@@ -270,6 +298,37 @@ const PatientDashboard = () => {
               </CardContent>
             </Card>
 
+            {/* Test Summary */}
+            <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  Test Summary
+                </CardTitle>
+                <CardDescription>Overview of your test performance</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{tests.length}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Total Tests</div>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                      {tests.length > 0 ? Math.round(tests.reduce((acc, test) => acc + (test.maxRangeOfMotion / 360) * 100, 0) / tests.length) : 0}%
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Avg. Range of Motion</div>
+                  </div>
+                  <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                      {tests.length > 0 ? new Date(tests[0].testDate).toLocaleDateString() : 'N/A'}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Latest Test</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Test Reports */}
             <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between">
@@ -284,41 +343,52 @@ const PatientDashboard = () => {
                   variant="outline"
                   className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800"
                 >
-                  {(patient.tests?.length ?? 0)} Reports
+                  {tests.length} Reports
                 </Badge>
               </CardHeader>
               <CardContent>
-                {(patient.tests?.length ?? 0) > 0 ? (
+                {testsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-200 border-t-blue-600 mx-auto mb-4"></div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Loading tests...</p>
+                  </div>
+                ) : tests.length > 0 ? (
                   <div className="space-y-3">
-                    {[...(patient.tests ?? [])]
-                      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                      .map((test, index) => (
-                        <div
-                          key={test._id}
-                          className="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                              <Activity className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-sm text-gray-900 dark:text-white">
-                                Test {index + 1}
-                              </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {new Date(test.date).toLocaleDateString()}
-                              </p>
-                            </div>
+                    {tests.map((test, index) => (
+                      <div
+                        key={test._id}
+                        className="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
+                        onClick={() => navigate(`/patient-test-report/${test._id}`)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                            <Activity className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                           </div>
-                          <div className="flex items-center gap-3">
-                            <Button variant="outline" size="sm">
-                              <Eye className="h-3 w-3 mr-1" />
-                              View
-                            </Button>
+                          <div>
+                            <p className="font-medium text-sm text-gray-900 dark:text-white">
+                              Test {index + 1}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(test.testDate).toLocaleDateString()}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                              <Stethoscope className="h-3 w-3" />
+                              {test.doctorName}
+                            </p>
                           </div>
                         </div>
-                      ))}
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline" className="text-xs">
+                            {test.legTested} Leg
+                          </Badge>
+                          <Button variant="outline" size="sm">
+                            <Eye className="h-3 w-3 mr-1" />
+                            View
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="text-center py-8">
@@ -326,7 +396,6 @@ const PatientDashboard = () => {
                     <p className="text-sm text-gray-500 dark:text-gray-400">No test reports available yet</p>
                   </div>
                 )}
-
               </CardContent>
             </Card>
           </div>

@@ -4,6 +4,7 @@ import cors from 'cors';
 import hospitalAdminRoutes from './routes/hospitalAdmin';
 import doctorRoutes from './routes/doctor';
 import superAdminRoutes from './routes/SuperAdmin';
+import patientRoutes from './routes/patient';
 
 const app: Express = express();
 
@@ -36,6 +37,7 @@ mongoose.connect('mongodb://localhost:28017/nambikkai')
 app.use('/api/hospital-admin', hospitalAdminRoutes);
 app.use('/api/doctor', doctorRoutes);
 app.use('/api/super-admin', superAdminRoutes);
+app.use('/api/patient', patientRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
