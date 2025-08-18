@@ -230,27 +230,6 @@ const DoctorDashboard = () => {
                     <p className="text-sm font-medium">{testMetrics.testsDone}</p>
                   </div>
                 </Card>
-                <Card className={`border-0 p-2 flex items-center gap-2 w-[calc(50%-0.375rem)] sm:w-auto ${
-                  testMetrics.testsRemaining <= 0 
-                    ? 'bg-red-50 dark:bg-red-900/20' 
-                    : 'bg-orange-50 dark:bg-orange-900/20'
-                }`}>
-                  <Activity className={`h-4 w-4 ${
-                    testMetrics.testsRemaining <= 0 
-                      ? 'text-red-600 dark:text-red-400' 
-                      : 'text-orange-600 dark:text-orange-400'
-                  }`} />
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Tests Remaining</p>
-                    <p className={`text-sm font-medium ${
-                      testMetrics.testsRemaining <= 0 
-                        ? 'text-red-600 dark:text-red-400' 
-                        : 'text-orange-600 dark:text-orange-400'
-                    }`}>
-                      {testMetrics.testsRemaining}
-                    </p>
-                  </div>
-                </Card>
 
                 <Card className="bg-purple-50 dark:bg-purple-900/20 border-0 p-2 flex items-center gap-2 w-[calc(50%-0.375rem)] sm:w-auto">
                   <Calendar className="h-4 w-4 text-purple-600 dark:text-purple-400" />
@@ -361,17 +340,7 @@ const DoctorDashboard = () => {
                             <Button
                               size="sm"
                               onClick={() => handleRunTest(appointment)}
-                              disabled={testMetrics && testMetrics.testsRemaining <= 0}
-                              className={`h-7 text-xs ${
-                                testMetrics && testMetrics.testsRemaining <= 0
-                                  ? 'bg-gray-400 cursor-not-allowed'
-                                  : 'bg-blue-600 hover:bg-blue-700'
-                              } text-white`}
-                              title={
-                                testMetrics && testMetrics.testsRemaining <= 0
-                                  ? 'No tests remaining. Please contact hospital admin for more tests.'
-                                  : 'Run Test'
-                                }
+                              className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white"
                             >
                               <Play className="h-3 w-3 mr-1" />
                               Run Test
@@ -423,17 +392,7 @@ const DoctorDashboard = () => {
                           <Button
                             size="sm"
                             onClick={() => handleRunTest(appointment)}
-                            disabled={testMetrics && testMetrics.testsRemaining <= 0}
-                            className={`h-7 text-xs ${
-                              testMetrics && testMetrics.testsRemaining <= 0
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-blue-600 hover:bg-blue-700'
-                            } text-white ml-2`}
-                            title={
-                              testMetrics && testMetrics.testsRemaining <= 0
-                                ? 'No tests remaining. Please contact hospital admin for more tests.'
-                                : 'Run Test'
-                              }
+                            className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white ml-2"
                           >
                             <Play className="h-3 w-3 mr-1" />
                             Run Test

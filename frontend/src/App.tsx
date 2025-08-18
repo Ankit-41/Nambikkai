@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import HospitalAdminDashboard from "./pages/HospitalAdminDashboard";
+import FornowHome from "./pages/FornowHome";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import PatientDashboard from "./pages/PatientDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
@@ -25,7 +26,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Login />} />
+            <Route path="/" element={<Index />} />
+            <Route path="/FornowHome" element={<FornowHome />} />
             <Route path="/login" element={<Login />} />
             <Route path="/hospital-admin" element={<HospitalAdminDashboard />} />
             <Route path="/doctor" element={<DoctorDashboard />} />
