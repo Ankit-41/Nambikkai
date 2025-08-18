@@ -210,83 +210,6 @@ export const getDashboardData = async (req: Request, res: Response): Promise<voi
   }
 };
 
-export const createPatient = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const {
-      name,
-      age,
-      sex,
-      phoneNumber,
-      address,
-      kneeCondition,
-      otherMorbidities,
-      rehabDuration,
-      mriImage
-    } = req.body;
-
-    const doctor = (req as any).doctor;
-    if (!doctor) {
-      res.status(401).json({ message: 'Authentication required' });
-      return;
-    }
-
-    // Generate a unique patient code
-    let unique = false;
-    let newCode = '';
-    while (!unique) {
-      newCode = generatePatientCode();
-      const existing = await Patient.findOne({ patientCode: newCode });
-      if (!existing) unique = true;
-    }
-    const patientCode = newCode;
-
-    // Create user first
-    const user = await User.create({
-      name,
-      role: 'patient'
-    });
-
-    // Create patient
-    const patient = await Patient.create({
-      userId: user._id,
-      age,
-      sex,
-      phoneNumber,
-      address,
-      kneeCondition,
-      otherMorbidities,
-      rehabDuration,
-      mriImage,
-      doctorId: doctor._id,
-      tests: [],
-      patientCode
-    });
-
-    doctor.patients.push(patient._id);
-    await doctor.save();
-
-
-    res.status(201).json({
-      message: 'Patient created successfully',
-      data: {
-        id: patient._id,
-        name: user.name,
-        age: patient.age,
-        sex: patient.sex,
-        kneeCondition: patient.kneeCondition,
-        patientCode
-      }
-    });
-
-  } catch (error) {
-    console.error('Error creating patient:', error);
-    res.status(500).json({ 
-      message: 'Error creating patient',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-}; 
-
 export const saveTestResults = async (req: Request, res: Response): Promise<void> => {
   try {
     const {
@@ -303,6 +226,15 @@ export const saveTestResults = async (req: Request, res: Response): Promise<void
     const doctor = (req as any).doctor;
     if (!doctor) {
       res.status(401).json({ message: 'Authentication required' });
+      return;
+    }
+
+    // Check if doctor has tests remaining
+    if (!doctor.testMetrics || doctor.testMetrics.testsRemaining <= 0) {
+      res.status(403).json({ 
+        message: 'No tests remaining. Please contact hospital admin for more tests.',
+        currentMetrics: doctor.testMetrics
+      });
       return;
     }
 
