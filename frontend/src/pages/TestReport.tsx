@@ -339,16 +339,8 @@ const TestReport = () => {
         filesProcessed: report.filesProcessed || 0
       };
 
-      // Get doctor email from localStorage
-      const doctorEmail = localStorage.getItem('email');
-      console.log('🔑 Doctor email from localStorage:', doctorEmail);
-      
-      if (!doctorEmail) {
-        throw new Error('Doctor email not found');
-      }
-
       console.log('📤 Sending API request to save test results...');
-      const response = await doctorApi.saveTestResults(doctorEmail, testData, appointmentId);
+      const response = await doctorApi.saveTestResults(testData, appointmentId);
       console.log('📥 API response received:', response);
 
       if (response.status === 201) {

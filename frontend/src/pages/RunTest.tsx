@@ -82,13 +82,13 @@ const RunTest = () => {
   const [completedTests, setCompletedTests] = useState<Set<TestType>>(new Set())
   const [generating, setGenerating] = useState(false)
 
-  const email = localStorage.getItem("email")
-
+  // Check if user is authenticated
   useEffect(() => {
-    if (!email) {
+    const token = localStorage.getItem("token")
+    if (!token) {
       navigate("/login")
     }
-  }, [email, navigate])
+  }, [navigate])
 
   useEffect(() => {
     let timer: NodeJS.Timeout
@@ -156,7 +156,7 @@ const RunTest = () => {
     //   body: JSON.stringify({ puckId, timestamp })
     // });
 
-    const response = await doctorApi.getReport(email, { puckId, timestamp })
+    const response = await doctorApi.getReport({ puckId, timestamp })
 
     const data = response.data;
     console.log("hiya hoo ha", data);

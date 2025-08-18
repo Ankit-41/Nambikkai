@@ -91,25 +91,17 @@ const HospitalAdminDashboard: React.FC = () => {
   const [patientCode, setPatientCode] = useState("");
   const [fetchingPatient, setFetchingPatient] = useState(false);
 
-  // Get email from localStorage
-  const email = localStorage.getItem("email")
-
-  // Redirect to login if email is not found
+  // Check if user is authenticated
   useEffect(() => {
-    if (!email) {
+    const token = localStorage.getItem("token")
+    if (!token) {
       navigate("/login")
     }
-  }, [email, navigate])
+  }, [navigate])
 
   const fetchDashboardData = async () => {
     try {
-      if (!email) {
-        setError("Email not found. Please login again.")
-        navigate("/login")
-        return
-      }
-
-      const response = await hospitalAdminApi.getDashboardData(email)
+      const response = await hospitalAdminApi.getDashboardData()
       console.log("Dashboard data response:", response.data)
       setHospitalName(response.data.data.name)
       setTestMetrics(response.data.data.testMetrics)
@@ -123,19 +115,12 @@ const HospitalAdminDashboard: React.FC = () => {
   }
 
   useEffect(() => {
-    if (email) {
-      fetchDashboardData()
-    }
-  }, [email])
+    fetchDashboardData()
+  }, [])
 
   const handleAddDoctor = async () => {
     try {
-      if (!email) {
-        setError("Email not found. Please login again.")
-        return
-      }
-
-      const response = await hospitalAdminApi.createDoctor(email, newDoctor)
+      const response = await hospitalAdminApi.createDoctor(newDoctor)
 
       toast({
         title: "Success",
@@ -164,12 +149,12 @@ const HospitalAdminDashboard: React.FC = () => {
 
   const handleAllocateTests = async () => {
     try {
-      if (!email || !selectedDoctor) {
-        setError("Email or doctor not found")
+      if (!selectedDoctor) {
+        setError("Doctor not found")
         return
       }
 
-      await hospitalAdminApi.allocateTests(email, selectedDoctor._id, testCount)
+      await hospitalAdminApi.allocateTests(selectedDoctor._id, testCount)
       await fetchDashboardData()
       setShowAllocateTestsModal(false)
       setSelectedDoctor(null)
@@ -933,15 +918,12 @@ const HospitalAdminDashboard: React.FC = () => {
               <Button
                 onClick={async () => {
                   try {
-                    if (!email) {
-                      setError("Email not found. Please login again.");
-                      return;
-                    }
-                    await hospitalAdminApi.createAppointment(email, {
+                    await hospitalAdminApi.createAppointment({
                       ...newAppointment,
                       age: Number(newAppointment.age),
                       rehabDuration: String(newAppointment.rehabDuration),
-                      appointmentDate: new Date(newAppointment.appointmentDate).toISOString()
+                      appointmentDate: new Date(newAppointment.appointmentDate).toISOString(),
+                      patientCode: patientCode || undefined // Include patientCode if it exists
                     });
                     toast({ title: "Success", description: "Appointment created successfully" });
                     setShowAddAppointmentModal(false);

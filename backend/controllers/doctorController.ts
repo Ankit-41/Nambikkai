@@ -3,6 +3,7 @@ import { User, Doctor, Patient } from '../models';
 import Test from '../models/Test';
 import { Appointment } from '../models/Appointment';
 import { generatePatientCode } from '../scripts/generatePatientCode';
+import { generateToken } from '../utils/jwt';
 import axios from 'axios';
 // hi guys
 import fs from "fs";
@@ -142,6 +143,13 @@ export const loginDoctor = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
+    // Generate JWT token
+    const token = generateToken({
+      userId: doctor._id.toString(),
+      email: doctor.email,
+      role: 'doctor'
+    });
+
     res.status(200).json({
       message: 'Login successful',
       data: {
@@ -149,7 +157,8 @@ export const loginDoctor = async (req: Request, res: Response): Promise<void> =>
         name: user.name,
         email: doctor.email,
         gender: doctor.gender,
-        testMetrics: doctor.testMetrics
+        testMetrics: doctor.testMetrics,
+        token
       }
     });
 

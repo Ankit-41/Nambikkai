@@ -50,25 +50,17 @@ const DoctorDashboard = () => {
   const [error, setError] = useState<string | null>(null)
   const [expandedPatient, setExpandedPatient] = useState<string | null>(null)
 
-  // Get email from localStorage
-  const email = localStorage.getItem("email")
-
-  // Redirect to login if email is not found
+  // Check if user is authenticated
   useEffect(() => {
-    if (!email) {
+    const token = localStorage.getItem("token")
+    if (!token) {
       navigate("/login")
     }
-  }, [email, navigate])
+  }, [navigate])
 
   const fetchDashboardData = async () => {
     try {
-      if (!email) {
-        setError("Email not found. Please login again.")
-        navigate("/login")
-        return
-      }
-
-      const response = await doctorApi.getDashboardData(email)
+      const response = await doctorApi.getDashboardData()
       console.log("Dashboard data response:", response.data)
       setdoctorName(response.data.data.doctorName)
       setAppointments(response.data.data.appointments)
@@ -82,10 +74,8 @@ const DoctorDashboard = () => {
   }
 
   useEffect(() => {
-    if (email) {
-      fetchDashboardData()
-    }
-  }, [email])
+    fetchDashboardData()
+  }, [])
 
   const handleRunTest = (appointment: Appointment) => {
     navigate(`/run-test/${appointment.userId._id}`, {

@@ -19,7 +19,7 @@ router.post('/login', loginHospitalAdmin);
 
 // Protected routes (require auth)
 router.get('/dashboard', authMiddleware, getDashboardData);
-router.post('/doctors', createDoctor);
+router.post('/doctors', authMiddleware, createDoctor);
 router.post('/allocate-tests/:doctorId', authMiddleware, allocateTests);
 router.post('/appointments', authMiddleware, createAppointment);
 router.get('/patient/:patientCode', getPatientByCode);

@@ -20,6 +20,23 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Add response interceptor to handle token expiration
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid, redirect to login
+      localStorage.removeItem('token');
+      localStorage.removeItem('doctorData');
+      localStorage.removeItem('hospitalAdminData');
+      localStorage.removeItem('superAdminData');
+      localStorage.removeItem('patientData');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Super Admin API
 export const superAdminApi = {
   createSuperAdmin: (data: { name: string; email: string; password: string }) =>
@@ -33,8 +50,8 @@ export const superAdminApi = {
     api.post('/super-admin/login', data),
 
   // Dashboard Data
-  getDashboardData: (email: string) =>
-    api.get(`/super-admin/dashboard?email=${email}`),
+  getDashboardData: () =>
+    api.get('/super-admin/dashboard'),
 
   allocateTests: (data: { superAdminId: string; hospitalAdminId: string; count: number }) =>
     api.post('/super-admin/allocate-tests', data),
@@ -48,24 +65,24 @@ export const hospitalAdminApi = {
     api.post('/hospital-admin/login', data),
 
   // Dashboard Data
-  getDashboardData: (email: string) =>
-    api.get(`/hospital-admin/dashboard?email=${email}`),
+  getDashboardData: () =>
+    api.get('/hospital-admin/dashboard'),
 
   // Doctors Management
-  createDoctor: (email: string, data: {
+  createDoctor: (data: {
     name: string;
     email: string;
     password: string;
     gender: 'Male' | 'Female' | 'Other';
   }) =>
-    api.post(`/hospital-admin/doctors?email=${email}`, data),
+    api.post('/hospital-admin/doctors', data),
 
-  createAppointment: (email: string, appointmentData: any) =>
-    api.post(`/hospital-admin/appointments?email=${encodeURIComponent(email)}`, appointmentData),
+  createAppointment: (appointmentData: any) =>
+    api.post('/hospital-admin/appointments', appointmentData),
 
   // Test Management
-  allocateTests: (email: string, doctorId: string, count: number) =>
-    api.post(`/hospital-admin/allocate-tests/${doctorId}?email=${email}`, { count }),
+  allocateTests: (doctorId: string, count: number) =>
+    api.post(`/hospital-admin/allocate-tests/${doctorId}`, { count }),
 
   // Get patient details by code
   getPatientByCode: (patientCode: string) =>
@@ -79,13 +96,13 @@ export const doctorApi = {
     api.post('/doctor/login', data),
 
   // Dashboard Data
-  getDashboardData: (email: string) =>
-    api.get(`/doctor/dashboard?email=${email}`),
+  getDashboardData: () =>
+    api.get('/doctor/dashboard'),
 
   // Patients
-  getPatients: (email: string) =>
-    api.get(`/doctor/patients?email=${email}`),
-  createPatient: (email: string, data: {
+  getPatients: () =>
+    api.get('/doctor/patients'),
+  createPatient: (data: {
     name: string;
     age: number;
     sex: 'Male' | 'Female' | 'Other';
@@ -96,28 +113,28 @@ export const doctorApi = {
     rehabDuration: string;
     mriImage: string;
   }) =>
-    api.post(`/doctor/patients?email=${email}`, data),
-  updatePatient: (email: string, patientId: string, data: any) =>
-    api.put(`/doctor/patients/${patientId}?email=${email}`, data),
-  deletePatient: (email: string, patientId: string) =>
-    api.delete(`/doctor/patients/${patientId}?email=${email}`),
+    api.post('/doctor/patients', data),
+  updatePatient: (patientId: string, data: any) =>
+    api.put(`/doctor/patients/${patientId}`, data),
+  deletePatient: (patientId: string) =>
+    api.delete(`/doctor/patients/${patientId}`),
 
   // Tests
-  getTests: (email: string) =>
-    api.get(`/doctor/tests?email=${email}`),
-  createTest: (email: string, data: {
+  getTests: () =>
+    api.get('/doctor/tests'),
+  createTest: (data: {
     patientId: string;
     puckId: string;
   }) =>
-    api.post(`/doctor/tests?email=${email}`, data),
+    api.post('/doctor/tests', data),
 
   // Report
-  getReport: (email: string, data:
+  getReport: (data:
     { puckId: string, timestamp: string }) =>
-    api.post(`/doctor/download-report?email=${email}`, data),
+    api.post('/doctor/download-report', data),
 
   // Save Test Results
-  saveTestResults: (email: string, data: {
+  saveTestResults: (data: {
     patientId: string;
     puckId: string;
     legTested: string;
@@ -136,7 +153,7 @@ export const doctorApi = {
     doctorNotes: string;
     filesProcessed: number;
   }, appointmentId?: string) =>
-    api.post(`/doctor/save-test-results?email=${email}`, { ...data, appointmentId }),
+    api.post('/doctor/save-test-results', { ...data, appointmentId }),
 };
 
 // Patient API

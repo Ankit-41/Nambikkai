@@ -1,18 +1,23 @@
 import { Request, Response, NextFunction } from 'express';
-import {  SuperAdmin } from '../models/SuperAdmin';
+import { SuperAdmin } from '../models/SuperAdmin';
+import { verifyToken, extractTokenFromHeader } from '../utils/jwt';
 
 export const SuperAdminAuthMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const email = req.query.email as string;
-    console.log('Auth middleware - Email:', email);
-
-    if (!email) {
-      console.log('Auth middleware - No email provided');
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader) {
+      console.log('Auth middleware - No authorization header');
       res.status(401).json({ message: 'Authentication required' });
       return;
     }
 
-    const superAdmin = await SuperAdmin.findOne({ email });
+    const token = extractTokenFromHeader(authHeader);
+    const decoded = verifyToken(token);
+    
+    console.log('Auth middleware - Decoded token:', decoded);
+
+    const superAdmin = await SuperAdmin.findOne({ email: decoded.email });
     console.log('Auth middleware - Found super admin:', superAdmin ? 'Yes' : 'No');
     
     if (!superAdmin) {
@@ -22,11 +27,12 @@ export const SuperAdminAuthMiddleware = async (req: Request, res: Response, next
     }
 
     (req as any).superAdmin = superAdmin;
+    (req as any).user = decoded;
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);
-    res.status(500).json({ 
-      message: 'Authentication error',
+    res.status(401).json({ 
+      message: 'Invalid or expired token',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }

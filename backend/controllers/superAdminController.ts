@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { SuperAdmin } from '../models/SuperAdmin';
 import { User } from '../models/User';
 import { HospitalAdmin } from '../models/HospitalAdmin';
+import { generateToken } from '../utils/jwt';
 import mongoose from 'mongoose';
 
 export const createSuperAdmin = async (req: Request, res: Response): Promise<void> => {
@@ -111,13 +112,21 @@ export const loginSuperAdmin = async (req: Request, res: Response): Promise<void
         return;
       }
   
+      // Generate JWT token
+      const token = generateToken({
+        userId: superAdmin._id.toString(),
+        email: superAdmin.email,
+        role: 'super_admin'
+      });
+
       res.status(200).json({
         message: 'Login successful',
         data: {
           id: superAdmin._id,
           name: user.name,
           email: superAdmin.email,
-          hospitalCentres: superAdmin.hospitalCentres
+          hospitalCentres: superAdmin.hospitalCentres,
+          token
         }
       });
   

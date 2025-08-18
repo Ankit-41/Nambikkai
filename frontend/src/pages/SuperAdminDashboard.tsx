@@ -72,27 +72,19 @@ const SuperAdminDashboard = () => {
   const [allocateCount, setAllocateCount] = useState(0)
 
   useEffect(() => {
-    const storedData = localStorage.getItem("superAdminData")
-    const email = localStorage.getItem("email")
+    const token = localStorage.getItem("token")
     
-    console.log("Stored superAdminData:", storedData)
-    console.log("Stored email:", email)
-    
-    if (!storedData || !email) {
+    if (!token) {
       navigate("/login")
       return
     }
 
-    const data = JSON.parse(storedData)
-    console.log("Parsed superAdminData:", data)
-    setSuperAdminData(data)
-    loadDashboardData(email)
+    loadDashboardData()
   }, [navigate])
 
-  const loadDashboardData = async (email: string) => {
+  const loadDashboardData = async () => {
     try {
-      console.log("Loading dashboard data for email:", email)
-      const response = await superAdminApi.getDashboardData(email)
+      const response = await superAdminApi.getDashboardData()
       console.log("Dashboard data response:", response.data)
       setSuperAdminData(response.data.data)
     } catch (error: any) {
@@ -134,10 +126,7 @@ const SuperAdminDashboard = () => {
       setCreateFormData({ name: "", email: "", password: "", totalTests: 500 })
       
       // Reload dashboard data
-      const email = localStorage.getItem("email")
-      if (email) {
-        loadDashboardData(email)
-      }
+      loadDashboardData()
     } catch (error: any) {
       console.error("Error creating hospital admin:", error)
       toast({
@@ -149,8 +138,8 @@ const SuperAdminDashboard = () => {
   }
 
   const handleLogout = () => {
+    localStorage.removeItem("token")
     localStorage.removeItem("superAdminData")
-    localStorage.removeItem("email")
     navigate("/login")
   }
 
@@ -187,8 +176,7 @@ const SuperAdminDashboard = () => {
       setAllocateModal({ open: false, centre: null })
       setAllocateCount(0)
       // Refresh dashboard
-      const email = localStorage.getItem("email")
-      if (email) loadDashboardData(email)
+      loadDashboardData()
     } catch (error: any) {
       toast({
         title: "Error",

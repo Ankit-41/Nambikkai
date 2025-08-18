@@ -2,7 +2,6 @@ import express, { Router } from 'express';
 import { 
   loginDoctor,
   getDashboardData,
-  createPatient,
   downloadAndSaveReport,
   saveTestResults
 } from '../controllers/doctorController';
@@ -16,7 +15,6 @@ router.post('/login', loginDoctor);
 
 // Protected routes (require auth)
 router.get('/dashboard', DocAuthMiddleware, getDashboardData);
-router.post('/patients', DocAuthMiddleware, createPatient);
 router.post('/download-report', downloadAndSaveReport);
 router.post('/save-test-results', DocAuthMiddleware, saveTestResults);
 

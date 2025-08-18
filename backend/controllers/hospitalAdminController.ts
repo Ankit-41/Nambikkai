@@ -3,6 +3,7 @@ import { User, HospitalAdmin, Doctor, Patient } from '../models';
 import mongoose from 'mongoose';
 import { Appointment } from '../models/Appointment';
 import { generatePatientCode } from '../scripts/generatePatientCode';
+import { generateToken } from '../utils/jwt';
 
 
 export const loginHospitalAdmin = async (req: Request, res: Response): Promise<void> => {
@@ -38,6 +39,13 @@ export const loginHospitalAdmin = async (req: Request, res: Response): Promise<v
       return;
     }
 
+    // Generate JWT token
+    const token = generateToken({
+      userId: hospitalAdmin._id.toString(),
+      email: hospitalAdmin.email,
+      role: 'hospital_admin'
+    });
+
     res.status(200).json({
       message: 'Login successful',
       data: {
@@ -45,7 +53,8 @@ export const loginHospitalAdmin = async (req: Request, res: Response): Promise<v
         name: user.name,
         email: hospitalAdmin.email,
         testMetrics: hospitalAdmin.testMetrics,
-        doctors: hospitalAdmin.doctors
+        doctors: hospitalAdmin.doctors,
+        token
       }
     });
 
@@ -116,7 +125,6 @@ export const getDashboardData = async (req: Request, res: Response): Promise<voi
 export const createDoctor = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, email, password, gender } = req.body;
-    const adminEmail = req.query.email as string;
 
     // Validate request body
     if (!name || !email || !password || !gender) {
@@ -127,8 +135,8 @@ export const createDoctor = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    // Find hospital admin by email
-    const hospitalAdmin = await HospitalAdmin.findOne({ email: adminEmail });
+    // Get hospital admin from JWT token (set by auth middleware)
+    const hospitalAdmin = (req as any).hospitalAdmin;
     if (!hospitalAdmin) {
       res.status(401).json({ message: 'Hospital admin not found' });
       return;
@@ -333,14 +341,14 @@ export const createAppointment = async (req: Request, res: Response): Promise<vo
     // Create appointment
     const appointment = await Appointment.create({
       userId: user._id,
-      age,
-      sex,
-      phoneNumber,
-      address,
-      kneeCondition,
-      otherMorbidities,
-      rehabDuration,
-      mriImage,
+      age: patientCode ? patient.age : age, // Use existing patient's age if patientCode provided
+      sex: patientCode ? patient.sex : sex, // Use existing patient's sex if patientCode provided
+      phoneNumber: patientCode ? patient.phoneNumber : phoneNumber, // Use existing patient's phone if patientCode provided
+      address: patientCode ? patient.address : address, // Use existing patient's address if patientCode provided
+      kneeCondition: patientCode ? patient.kneeCondition : kneeCondition, // Use existing patient's condition if patientCode provided
+      otherMorbidities: patientCode ? patient.otherMorbidities : otherMorbidities, // Use existing patient's morbidities if patientCode provided
+      rehabDuration: patientCode ? patient.rehabDuration : rehabDuration, // Use existing patient's rehab duration if patientCode provided
+      mriImage: patientCode ? patient.mriImage : mriImage, // Use existing patient's MRI if patientCode provided
       doctorId,
       appointmentDate,
       patientCode: finalPatientCode

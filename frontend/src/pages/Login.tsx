@@ -108,9 +108,9 @@ const Login = () => {
             password: loginData.password,
           })
 
-          // Store admin data and email in localStorage
-          localStorage.setItem("hospitalAdminData", JSON.stringify(response.data))
-          localStorage.setItem("email", loginData.email)
+          // Store JWT token and user data
+          localStorage.setItem("token", response.data.data.token)
+          localStorage.setItem("hospitalAdminData", JSON.stringify(response.data.data))
 
           // Show success message
           toast({
@@ -118,6 +118,7 @@ const Login = () => {
             description: "Login successful!",
           })
 
+          // Navigate to dashboard
           // Navigate to dashboard
           navigate("/hospital-admin")
         } else if (selectedPersona === "super-admin") {
@@ -131,8 +132,9 @@ const Login = () => {
           
           console.log("Super admin login response:", response)
           
-          localStorage.setItem("superAdminData", JSON.stringify(response.data))
-          localStorage.setItem("email", loginData.email)
+          // Store JWT token and user data
+          localStorage.setItem("token", response.data.data.token)
+          localStorage.setItem("superAdminData", JSON.stringify(response.data.data))
 
           // Show success message
           toast({
@@ -149,9 +151,9 @@ const Login = () => {
             password: loginData.password,
           })
 
-          // Store doctor data and email in localStorage
-          localStorage.setItem("doctorData", JSON.stringify(response.data))
-          localStorage.setItem("email", loginData.email)
+          // Store JWT token and user data
+          localStorage.setItem("token", response.data.data.token)
+          localStorage.setItem("doctorData", JSON.stringify(response.data.data))
 
           // Show success message
           toast({
