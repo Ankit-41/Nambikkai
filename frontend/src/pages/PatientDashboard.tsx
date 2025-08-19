@@ -65,13 +65,10 @@ const PatientDashboard = () => {
   const fetchPatientTests = async (patientCode: string) => {
     try {
       setTestsLoading(true);
-      const response = await fetch(`http://localhost:5000/api/patient/tests/${patientCode}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setTests(data.data);
-        }
-      }
+
+      const response = await patientApi.getTests(patientCode);
+      console.log("response is", response);
+      setTests(response.data.data);
     } catch (err) {
       console.error('Error fetching tests:', err);
     } finally {
