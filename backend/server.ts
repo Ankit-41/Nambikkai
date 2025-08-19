@@ -1,6 +1,7 @@
 import express, { Express } from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
+import 'dotenv/config';
 import hospitalAdminRoutes from './routes/hospitalAdmin';
 import doctorRoutes from './routes/doctor';
 import superAdminRoutes from './routes/SuperAdmin';
@@ -29,9 +30,9 @@ app.get('/test', (req, res) => {
 });
 
 // MongoDB connection
-mongoose.connect('mongodb://localhost:28017/nambikkai')
+mongoose.connect(process.env.MONGO_URI as string)
   .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+  .catch((err: Error) => console.error('MongoDB connection error:', err));
 
 // Routes
 app.use('/api/hospital-admin', hospitalAdminRoutes);

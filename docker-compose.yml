@@ -1,0 +1,29 @@
+services:
+  backend:
+    ports:
+      - "5000:5000"
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - backend/.env
+    environment:
+      NODE_ENV: production
+    restart: unless-stopped
+    networks: [app]
+
+  web:
+    ports:
+      - "8080:80"
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    depends_on:
+      - backend
+    # For local test, we’ll expose 8080 via override; keep this empty here or comment out.
+    restart: unless-stopped
+    networks: [app]
+
+networks:
+  app:
+    driver: bridge
