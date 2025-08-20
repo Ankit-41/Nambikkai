@@ -90,6 +90,8 @@ const HospitalAdminDashboard: React.FC = () => {
   });
   const [patientCode, setPatientCode] = useState("");
   const [fetchingPatient, setFetchingPatient] = useState(false);
+  const [showPatientIdModal, setShowPatientIdModal] = useState(false);
+  const [newPatientId, setNewPatientId] = useState("");
 
   // Check if user is authenticated
   useEffect(() => {
@@ -929,14 +931,22 @@ const HospitalAdminDashboard: React.FC = () => {
               <Button
                 onClick={async () => {
                   try {
-                    await hospitalAdminApi.createAppointment({
+                    const response = await hospitalAdminApi.createAppointment({
                       ...newAppointment,
                       age: Number(newAppointment.age),
                       rehabDuration: String(newAppointment.rehabDuration),
                       appointmentDate: new Date(newAppointment.appointmentDate).toISOString(),
                       patientCode: patientCode || undefined // Include patientCode if it exists
                     });
-                    toast({ title: "Success", description: "Appointment created successfully" });
+                    
+                    // If this is a new patient (no patientCode provided), show the patient ID modal
+                    if (!patientCode) {
+                      setNewPatientId(response.data.data.patientCode);
+                      setShowPatientIdModal(true);
+                    } else {
+                      toast({ title: "Success", description: "Appointment created successfully" });
+                    }
+                    
                     setShowAddAppointmentModal(false);
                     setNewAppointment({
                       name: "",
@@ -967,6 +977,52 @@ const HospitalAdminDashboard: React.FC = () => {
                 Create Appointment
               </Button>
             </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Patient ID Modal */}
+      <Dialog open={showPatientIdModal} onOpenChange={setShowPatientIdModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg text-center text-green-600 dark:text-green-400 flex items-center justify-center gap-2">
+              <User className="h-5 w-5" />
+              New Patient Created Successfully!
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-6 text-center space-y-4">
+            <div className="bg-green-50 dark:bg-green-950/30 p-4 rounded-lg border border-green-200 dark:border-green-800">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                Please save this Patient ID for future reference:
+              </p>
+              <div className="bg-white dark:bg-gray-800 p-3 rounded border border-green-300 dark:border-green-700">
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400 tracking-wider">
+                  {newPatientId}
+                </p>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                The patient will need this ID to log in to their account.
+              </p>
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              <p>• Share this ID with the patient</p>
+              <p>• Patient can use this ID to log in at any time</p>
+              <p>• Keep this ID safe for future appointments</p>
+            </div>
+          </div>
+          <DialogFooter className="p-4">
+            <Button 
+              onClick={() => {
+                setShowPatientIdModal(false);
+                toast({ 
+                  title: "Appointment Created", 
+                  description: "Appointment created successfully with new patient" 
+                });
+              }}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              Got it!
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
