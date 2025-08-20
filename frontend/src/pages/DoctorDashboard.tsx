@@ -238,6 +238,17 @@ const DoctorDashboard = () => {
                     <p className="text-sm font-medium">{new Date().toLocaleDateString()}</p>
                   </div>
                 </Card>
+                <Button
+                  onClick={() => {
+                    localStorage.removeItem("token")
+                    navigate("/login")
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs border-red-200 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/20 w-[calc(50%-0.375rem)] sm:w-auto"
+                >
+                  Logout
+                </Button>
               </div>
             </div>
           </div>

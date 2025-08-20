@@ -261,6 +261,17 @@ const HospitalAdminDashboard: React.FC = () => {
                     </p>
                   </div>
                 </Card>
+                <Button
+                  onClick={() => {
+                    localStorage.removeItem("token")
+                    navigate("/login")
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs border-red-200 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/20"
+                >
+                  Logout
+                </Button>
               </div>
             </div>
           </div>
@@ -873,7 +884,7 @@ const HospitalAdminDashboard: React.FC = () => {
                   type="number"
                   value={newAppointment.rehabDuration}
                   onChange={e => setNewAppointment({ ...newAppointment, rehabDuration: e.target.value })}
-                  placeholder="Duration in weeks"
+                  placeholder="Duration (weeks, numbers only)"
                   className="h-8 text-sm"
                 />
               </div>

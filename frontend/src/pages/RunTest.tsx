@@ -370,7 +370,7 @@ const RunTest = () => {
                     id="puckId"
                     value={legLength}
                     onChange={(e) => setLegLength(e.target.value)}
-                    placeholder="Enter Leg Length"
+                    placeholder="Enter Leg Length in cm"
                     className={`pl-3 ${!legLength && "border-red-200 dark:border-red-800"}`}
                   />
                   {!legLength && (
