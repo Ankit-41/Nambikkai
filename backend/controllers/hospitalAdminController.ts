@@ -242,7 +242,7 @@ export const allocateTests = async (req: Request, res: Response): Promise<void> 
     await doctor.save();
 
     // Update hospital admin's test metrics
-    hospitalAdmin.testMetrics.testsAllocated -= count;
+    hospitalAdmin.testMetrics.testsAllocated += count;
     hospitalAdmin.testMetrics.testsRemaining -= count;
     await hospitalAdmin.save();
 
