@@ -175,6 +175,9 @@ export const patientApi = {
     api.get(`/patient/test-report/${testId}`),
   getPatientByCode: (patientCode: string) =>
     api.get(`/hospital-admin/patient/${patientCode}`),
+  getUniqueTest: (testId: string, patientCode: string) =>
+    api.get(`/patient/test-report/${testId}?patientCode=${patientCode}`),
+
 };
 
 // Test API

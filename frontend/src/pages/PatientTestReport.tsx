@@ -39,6 +39,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { patientApi } from "@/services/api";
 
 type TimePoint = {
   time: number;
@@ -99,17 +100,14 @@ const PatientTestReport = () => {
         const patientCode = patient.patientCode;
 
         // Fetch test report using the patient API
-        const response = await fetch(`http://localhost:5000/api/patient/test-report/${testId}?patientCode=${patientCode}`);
-        if (!response.ok) {
+        const response = await patientApi.getUniqueTest(testId, patientCode);
+        if (response.status !== 200) {
           throw new Error('Failed to fetch test report');
         }
 
-        const data = await response.json();
-        if (data.success) {
-          setReport(data.data);
-        } else {
-          throw new Error(data.message || 'Failed to fetch test report');
-        }
+        const data = response.data.data;
+        setReport(data);
+        console.log("data", data);
       } catch (err: any) {
         console.error('Error fetching test report:', err);
         setError(err.message || 'Failed to fetch test report');
