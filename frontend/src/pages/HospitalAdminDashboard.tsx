@@ -831,8 +831,11 @@ const HospitalAdminDashboard: React.FC = () => {
                   value={newAppointment.age}
                   onChange={e => setNewAppointment({ ...newAppointment, age: e.target.value })}
                   placeholder="Age in years"
+                  min="0"
+                  max="150"
                   className="h-8 text-sm"
                 />
+                <p className="text-xs text-gray-500 dark:text-gray-400">Age must be between 0 and 150 years</p>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -887,8 +890,11 @@ const HospitalAdminDashboard: React.FC = () => {
                   value={newAppointment.rehabDuration}
                   onChange={e => setNewAppointment({ ...newAppointment, rehabDuration: e.target.value })}
                   placeholder="Duration (weeks, numbers only)"
+                  min="0"
+                  max="1000"
                   className="h-8 text-sm"
                 />
+                <p className="text-xs text-gray-500 dark:text-gray-400">Duration must be between 0 and 1000 weeks</p>
               </div>
             </div>
             <div className="space-y-1">
@@ -930,11 +936,33 @@ const HospitalAdminDashboard: React.FC = () => {
               </Button>
               <Button
                 onClick={async () => {
+                  // Validate age and rehabilitation duration
+                  const age = Number(newAppointment.age);
+                  const rehabDuration = Number(newAppointment.rehabDuration);
+                  
+                  if (isNaN(age) || age < 0 || age > 150) {
+                    toast({
+                      title: "Invalid Age",
+                      description: "Age must be a valid number between 0 and 150 years",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+                  
+                  if (isNaN(rehabDuration) || rehabDuration < 0 || rehabDuration > 1000) {
+                    toast({
+                      title: "Invalid Rehabilitation Duration",
+                      description: "Rehabilitation duration must be a valid number between 0 and 1000 weeks",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+                  
                   try {
                     const response = await hospitalAdminApi.createAppointment({
                       ...newAppointment,
-                      age: Number(newAppointment.age),
-                      rehabDuration: String(newAppointment.rehabDuration),
+                      age: age,
+                      rehabDuration: String(rehabDuration),
                       appointmentDate: new Date(newAppointment.appointmentDate).toISOString(),
                       patientCode: patientCode || undefined // Include patientCode if it exists
                     });

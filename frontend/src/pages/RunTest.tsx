@@ -212,7 +212,7 @@ const RunTest = () => {
     )
   }
 
-  const canStartFirst = Boolean(puckId && leg)
+  const canStartFirst = Boolean(puckId && leg && legLength && Number(legLength) > 0 && Number(legLength) <= 300)
   const completedCount = completedTests.size
   const progressPercentage = (completedCount / TEST_ORDER.length) * 100
 
@@ -368,9 +368,12 @@ const RunTest = () => {
                 <div className="relative">
                   <Input
                     id="puckId"
+                    type="number"
                     value={legLength}
                     onChange={(e) => setLegLength(e.target.value)}
                     placeholder="Enter Leg Length in cm"
+                    min="0"
+                    max="300"
                     className={`pl-3 ${!legLength && "border-red-200 dark:border-red-800"}`}
                   />
                   {!legLength && (
@@ -380,7 +383,7 @@ const RunTest = () => {
                   )}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Enter the patient's leg length
+                  Enter the patient's leg length (0-300 cm)
                 </p>
               </div>
             </div>
