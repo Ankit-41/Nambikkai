@@ -25,8 +25,7 @@ services:
     restart: unless-stopped
     networks: [app]
     volumes:
-      # mount your nginx config dir (create it if needed)
-      - ./nginx/conf.d:/etc/nginx/conf.d
+      # Keep ACME webroot and cert storage only; Nginx config is baked into the image
       # ACME webroot and cert storage
       - ./certbot/www:/var/www/certbot
       - ./letsencrypt:/etc/letsencrypt
