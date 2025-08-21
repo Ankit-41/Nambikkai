@@ -13,16 +13,30 @@ services:
     networks: [app]
 
   web:
+    # expose HTTP & HTTPS publicly
     ports:
-      - "8080:80"
+      - "80:80"
+      - "443:443"
     build:
       context: .
       dockerfile: frontend/Dockerfile
     depends_on:
       - backend
-    # For local test, we’ll expose 8080 via override; keep this empty here or comment out.
     restart: unless-stopped
     networks: [app]
+    volumes:
+      # mount your nginx config dir (create it if needed)
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      # ACME webroot and cert storage
+      - ./certbot/www:/var/www/certbot
+      - ./letsencrypt:/etc/letsencrypt
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./letsencrypt:/etc/letsencrypt
+    # run on-demand; no ports
 
 networks:
   app:
